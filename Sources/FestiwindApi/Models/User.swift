@@ -39,6 +39,13 @@ final class User: Content, Model, @unchecked Sendable {
     @Field(key: "created_at")
     var createdAt: Date
     
+    @Siblings(
+        through: Reservation.self,
+        from: \.$user,
+        to: \.$workshop
+    )
+    var reservations: [Workshop]
+    
     init() {}
     
     init(id: UUID? = nil,

@@ -1,16 +1,16 @@
 //
-//  CreateUser.swift
+//  CreateWorkshop.swift
 //  FestiwindApi
 //
-//  Created by Apprenant 77 on 25/09/2026.
+//  Created by Apprenant 77 on 28/09/2026.
 //
 
 import Fluent
 
-struct CreateUser: AsyncMigration {
+struct CreateWorkshop: AsyncMigration {
     func prepare(on database: any Database) async throws {
         try await database
-            .schema(User.schema)
+            .schema(Workshop.schema)
             .id()
             .field(
                 "name",
@@ -18,31 +18,42 @@ struct CreateUser: AsyncMigration {
                 .required
             )
             .field(
-                "password_hash",
-                .string,
-                .required
-            )
-            .field(
-                "email",
-                .string,
-                .required
-            )
-            .field(
-                "role",
-                .string,
-                .required,
-            )
-            .field(
-                "created_at",
+                "start_time",
                 .date,
                 .required,
+            )
+            .field(
+                "end_time",
+                .date,
+                .required,
+            )
+            .field(
+                "capacity_max",
+                .int,
+                .required
+            )
+            .field(
+                "total_subscribers",
+                .int,
+                .required
+            )
+            .field(
+                "description",
+                .string,
+                .required,
+            )
+            .field(
+                "category_id",
+                .uuid,
+                .required,
+                .references(Category.schema, "id")
             )
             .create()
     }
     
     func revert(on database: any Database) async throws {
         try await database
-            .schema(User.schema)
+            .schema(Workshop.schema)
             .delete()
     }
 }

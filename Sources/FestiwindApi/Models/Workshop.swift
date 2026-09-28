@@ -29,9 +29,6 @@ final class Workshop: Content, Model, @unchecked Sendable {
     @Field(key: "name")
     var name: String
     
-//    @Field(key: "category_id")
-//    var categoryID: Type?
-    
     @Field(key: "start_time")
     var startTime: Date
     
@@ -47,6 +44,16 @@ final class Workshop: Content, Model, @unchecked Sendable {
     @Field(key: "description")
     var description: String
     
+    @Parent(key: "category_id")
+    var category: Category
+    
+    @Siblings(
+        through: Reservation.self,
+        from: \.$workshop,
+        to: \.$user
+    )
+    var attendees: [User]
+    
     init() {}
     
     init(id: UUID? = nil,
@@ -54,12 +61,14 @@ final class Workshop: Content, Model, @unchecked Sendable {
          startTime: Date,
          endTime: Date,
          capacityMax: Int,
-         totalSubscribers: Int) {
+         totalSubscribers: Int,
+         categoryID: UUID) {
         self.id = id
         self.name = name
         self.startTime = startTime
         self.endTime = endTime
         self.capacityMax = capacityMax
         self.totalSubscribers = totalSubscribers
+        self.$category.id = categoryID
     }
 }

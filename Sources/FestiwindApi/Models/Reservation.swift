@@ -8,7 +8,35 @@
 //Reservation
 //‣ Id
 //‣ Workshop Id
-//sur6 11
 //‣ User Id
 //‣ Status (validée/en attente/annulée)
 
+import Vapor
+import Fluent
+import struct Foundation.UUID
+
+final class Reservation: Content, Model, @unchecked Sendable {
+    static let schema = "reservations"
+    
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "status")
+    var status: String
+    
+    @Parent(key: "user_id")
+    var user: User
+    
+    @Parent(key: "workshop_id")
+    var workshop: Workshop
+    
+    init() {}
+    
+    init(id: UUID? = nil,
+         userID: UUID,
+         workshopID: UUID) {
+        self.id = id
+        self.$user.id = userID
+        self.$workshop.id = workshopID
+    }
+}
