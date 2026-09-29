@@ -33,9 +33,11 @@ final class Reservation: Content, Model, @unchecked Sendable {
     init() {}
     
     init(id: UUID? = nil,
+         status: String,
          userID: UUID,
          workshopID: UUID) {
         self.id = id
+        self.status = status
         self.$user.id = userID
         self.$workshop.id = workshopID
     }
