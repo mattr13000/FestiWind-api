@@ -12,3 +12,9 @@ struct CreateCategoryDTO: Content {
     var name: String
 }
 
+extension CreateCategoryDTO {
+    func toModel() -> Category {
+        return Category(name: name)
+    }
+}
+
