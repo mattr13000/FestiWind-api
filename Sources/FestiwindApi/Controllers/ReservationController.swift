@@ -14,15 +14,15 @@ struct ReservationController: RouteCollection {
         
         reservations.get(use: index)
         reservations.post(use: create)
+        reservations.get("user", ":id", use: userReservations)
         reservations.group(":id") { reservation in
-            reservations.get(use: show)
-            reservations.put(use: update)
-            reservations.delete(use: delete)
+            reservation.get(use: show)
+            reservation.put(use: update)
+            reservation.delete(use: delete)
         }
     }
     
     func index(req: Request) async throws -> [Reservation] {
-        
         return try await Reservation
             .query(on: req.db)
             .all()
@@ -55,6 +55,22 @@ struct ReservationController: RouteCollection {
         return reservation
     }
     
+    func userReservations(req: Request) async throws -> UserReservationsDTO {
+        guard let id = req.parameters.get("id", as: UUID.self)
+        else {throw Abort(.badRequest)}
+        
+        let reservations = try await Reservation
+            .query(on: req.db)
+            .with(\.$workshop)
+            .filter(\.$user.$id == id)
+            .all()
+        
+        let userReservations = try UserReservationsDTO(reservations:
+            reservations
+        )
+        return userReservations
+    }
+    
     func update(req: Request) async throws -> Reservation {
         
         guard let id = req.parameters.get("id", as: UUID.self)
@@ -74,6 +90,8 @@ struct ReservationController: RouteCollection {
         reservation.status = newReservation.status
         reservation.user.id = newReservation.user.id
         reservation.workshop.id = newReservation.workshop.id
+        
+        try await reservation.update(on: req.db)
         
         return reservation
     }

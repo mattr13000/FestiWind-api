@@ -43,4 +43,14 @@ final class Reservation: Content, Model, @unchecked Sendable {
     }
 }
 
+extension Reservation {
+    func toDTO() throws -> EventReservationDTO {
+        return EventReservationDTO (
+            status: status,
+            eventName: workshop.name,
+            startTime: workshop.startTime,
+            endTime: workshop.endTime
+        )
+    }
+}
 
