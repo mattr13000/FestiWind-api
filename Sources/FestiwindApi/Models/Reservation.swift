@@ -42,3 +42,5 @@ final class Reservation: Content, Model, @unchecked Sendable {
         self.$workshop.id = workshopID
     }
 }
+
+
