@@ -23,51 +23,51 @@ struct CategoryController: RouteCollection {
 
     }
     
-    func index(req: Request) async throws -> [Category] {
-        return try await Category
-            .query(on: req.db)
-            .all()
+    func index(req: Request) async throws -> [CategoryDTO] {
+
+        let categories = try await Category.query(on: req.db).all()
+
+        
+        return try categories.map { try $0.updateDTO() }
+        //        équivalent : return categories.map { category in CategoryDTO(id: category.id, name: category.name) }
+        
     }
     
     func create(req: Request) async throws -> Category {
 
-//        let dto = try req.content.decode(CreateCategoryDTO.self)
-        let category = try req.content.decode(Category.self)
+        let dto = try req.content.decode(CategoryDTO.self)
         
-//        struct CreateCategoryDTO: Content {
-//            var name: String
-//        }
-        
-
-        guard !category.name.isEmpty else {
+        guard !dto.name.isEmpty else {
             throw Abort(.badRequest, reason: "la catégorie est obligatoire.")
         }
-//    let category = Category(name: dto.name)
-
+        
+        let category = dto.toModel()
+        
         try await category.create(on: req.db)
         return category
     }
     
-    func update(req: Request) async throws -> Category {
+    func update(req: Request) async throws -> CategoryDTO {
+        
 
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Identifiant invalide.")
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Auteur introuvable.")
+            throw Abort(.notFound, reason: "Catégorie introuvable.")
         }
 
-        let newCategory = try req.content.decode(Category.self)
+        var newCategory = try req.content.decode(CategoryDTO.self)
 
         guard !newCategory.name.isEmpty else {
-            throw Abort(.badRequest, reason: "L'auteur est obligatoire.")
+            throw Abort(.badRequest, reason: "Catégorie est obligatoire.")
         }
-
+        
         category.name = newCategory.name
 
         try await category.update(on: req.db)
-        return category
+        return try category.updateDTO()
     }
 
     func delete(req: Request) async throws -> HTTPStatus {
@@ -77,7 +77,7 @@ struct CategoryController: RouteCollection {
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Auteur introuvable.")
+            throw Abort(.notFound, reason: "Catégorie introuvable.")
         }
 
         try await category.delete(on: req.db)

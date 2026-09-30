@@ -8,16 +8,16 @@ import Vapor
 import Fluent
 
 extension Category {
-    func createDTO() throws -> CreateCategoryDTO {
-                return CreateCategoryDTO(
+    func createDTO() throws -> CategoryDTO {
+                return CategoryDTO(
                     name: name
                 )
     }
 }
 
 extension Category {
-    func updateDTO() throws -> UpdateCategoryDTO {
-        return UpdateCategoryDTO(
+    func updateDTO() throws -> CategoryDTO {
+        return CategoryDTO(
             id: try requireID(),
             name: name
         )
