@@ -20,18 +20,45 @@ struct WorkshopController: RouteCollection {
         }
     }
         
-    
-    func index(req: Request) async throws -> [Workshop] { //DTO
-        return try await Workshop
-            .query(on: req.db)
-            .all()
+    // ************ index **********************************
+    func index(req: Request) async throws -> [WorkshopDTO] {
+    let workshops = try await Workshop
+        .query(on: req.db)
+        .all()
+
+    return workshops.map { workshop in
+        WorkshopDTO(
+            id: workshop.id,
+            name: workshop.name,
+            startTime: workshop.startTime,
+            endTime: workshop.endTime,
+            capacityMax: workshop.capacityMax,
+            totalSubscribers: workshop.totalSubscribers,
+            description: workshop.description,
+            categoryID: workshop.$category.id
+        )
     }
-    
-    func create(req: Request) async throws -> Workshop { //DTO
-        let workshop = try req.content.decode(Workshop.self)
-        try await workshop.create(on: req.db)
-        return workshop
-    }
+}
+   // ************ fin index **********************************
+
+//*************  Create ************************************
+func create(req: Request) async throws -> Workshop {
+    let dto = try req.content.decode(CreateWorkshopDTO.self)
+
+    let workshop = Workshop()
+    workshop.name = dto.name
+    workshop.startTime = dto.startTime
+    workshop.endTime = dto.endTime
+    workshop.capacityMax = dto.capacityMax
+    workshop.totalSubscribers = dto.totalSubscribers
+    workshop.description = dto.description
+    workshop.$category.id = dto.categoryID
+
+    try await workshop.create(on: req.db)
+
+    return workshop
+}
+//************* fin create ************************************
     
     func show(req: Request) async throws -> Workshop {
         guard let id = req.parameters.get("id", as: UUID.self)
