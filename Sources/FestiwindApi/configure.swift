@@ -16,7 +16,11 @@ func configure(_ app: Application) async throws {
         database: Environment.get("DATABASE_NAME") ?? ""
     ), as: .mysql)
 
-
+    app.migrations.add(CreateReservation())
+    app.migrations.add(CreateUser())
+    app.migrations.add(CreateCategory())
+    app.migrations.add(CreateWorkshop())
+    
     // register routes
     try routes(app)
 }
