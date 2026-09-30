@@ -1,18 +1,9 @@
 //
 //  CreateCategory.swift
-//  FestiwindApi
+//  Vapor_FestiWind
 //
-//  Created by Apprenant 77 on 29/09/2026.
+//  Created by Apprenant 87 on 28/09/2026.
 //
-
-//@ID(key: .id)
-//var id: UUID?
-//
-//@Field(key: "name")
-//var name: String
-//
-//@Children(for: \.$category)
-//var workshops: [Workshop]
 
 import Fluent
 
@@ -21,16 +12,12 @@ struct CreateCategory: AsyncMigration {
         try await database
             .schema(Category.schema)
             .id()
-            .field(
-                "name",
-                .string,
-                .required
-            )
+            .field("name", .string, .required)
             .create()
     }
     
-    func revert(on database: any Database) async throws {
-        try await database
+    func revert(on databse: any Database) async throws {
+        try await databse
             .schema(Category.schema)
             .delete()
     }
