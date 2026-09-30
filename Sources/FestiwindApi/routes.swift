@@ -10,7 +10,6 @@ func routes(_ app: Application) throws {
         "Hello, world!"
     }
     
-
     try app.register(collection: ReservationController())
     try app.register(collection: CategoryController())
     try app.register(collection: WorkshopController())
