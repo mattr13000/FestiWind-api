@@ -28,10 +28,10 @@ struct ReservationController: RouteCollection {
             .all()
     }
     
-    func create(req: Request) async throws -> Reservation {
+    func create(req: Request) async throws -> WorkshopReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
-        guard let user = try await User.find(dto.userID, on: req.db),
+        guard let _ = try await User.find(dto.userID, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
@@ -40,19 +40,27 @@ struct ReservationController: RouteCollection {
         let reservation = try dto.toModel()
         
         try await reservation.create(on: req.db)
-        return reservation
+        
+        reservation.$workshop.value = workshop
+        
+        return try reservation.toDTO()
     }
     
-    func show(req: Request) async throws -> Reservation {
+    func show(req: Request) async throws -> WorkshopReservationDTO {
         
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
-        guard let reservation = try await Reservation.find(id, on: req.db)
+        guard let reservation = try await Reservation
+            .query(on: req.db)
+            .with(\.$workshop)
+            .filter(\.$id == id)
+            .first()
+                
         else {throw Abort(.notFound)}
-
         
-        return reservation
+        
+        return try reservation.toDTO()
     }
     
     func userReservations(req: Request) async throws -> UserReservationsDTO {
@@ -71,13 +79,17 @@ struct ReservationController: RouteCollection {
         return userReservations
     }
     
-    func update(req: Request) async throws -> Reservation {
+    func update(req: Request) async throws -> WorkshopReservationDTO {
         
         guard let id = req.parameters.get("id", as: UUID.self)
                 
         else {throw Abort(.badRequest)}
         
-        guard let reservation = try await Reservation.find(id, on: req.db)
+        guard let reservation = try await Reservation
+            .query(on: req.db)
+            .with(\.$workshop)
+            .filter(\.$id == id)
+            .first()
                 
         else {throw Abort(.notFound)}
         
@@ -93,7 +105,7 @@ struct ReservationController: RouteCollection {
         
         try await reservation.update(on: req.db)
         
-        return reservation
+        return try reservation.toDTO()
     }
     
     func delete(req: Request) async throws -> HTTPStatus {
