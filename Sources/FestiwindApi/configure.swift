@@ -21,6 +21,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateCategory())
     app.migrations.add(CreateReservation())
     
+    app.asyncCommands.use(SeedCommand(), as: "seed")
     
     // register routes
     try routes(app)
