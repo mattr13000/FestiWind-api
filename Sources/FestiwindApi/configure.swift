@@ -13,13 +13,14 @@ func configure(_ app: Application) async throws {
         port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? MySQLConfiguration.ianaPortNumber,
         username: Environment.get("DATABASE_USERNAME") ?? "root",
         password: Environment.get("DATABASE_PASSWORD") ?? "",
-        database: Environment.get("DATABASE_NAME") ?? ""
+        database: Environment.get("DATABASE_NAME") ?? "festiwind_api"
     ), as: .mysql)
 
-    app.migrations.add(CreateReservation())
     app.migrations.add(CreateUser())
-    app.migrations.add(CreateCategory())
     app.migrations.add(CreateWorkshop())
+    app.migrations.add(CreateReservation())
+    app.migrations.add(CreateCategory())
+    
     
     // register routes
     try routes(app)
