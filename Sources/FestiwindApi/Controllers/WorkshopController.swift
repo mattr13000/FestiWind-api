@@ -20,57 +20,38 @@ struct WorkshopController: RouteCollection {
         }
     }
         
-    // ************ index **********************************
+
     func index(req: Request) async throws -> [WorkshopDTO] {
     let workshops = try await Workshop
         .query(on: req.db)
+        .with(\.$category)
         .all()
 
-    return workshops.map { workshop in
-        WorkshopDTO(
-            id: workshop.id,
-            name: workshop.name,
-            startTime: workshop.startTime,
-            endTime: workshop.endTime,
-            capacityMax: workshop.capacityMax,
-            totalSubscribers: workshop.totalSubscribers,
-            description: workshop.description,
-            categoryID: workshop.$category.id
-        )
+        return try workshops.map { try $0.toDTO()
     }
 }
-   // ************ fin index **********************************
+ 
+    func create(req: Request) async throws -> Workshop {
+    let dto = try req.content.decode(WorkshopDTO.self)
 
-//*************  Create ************************************
-func create(req: Request) async throws -> Workshop {
-    let dto = try req.content.decode(CreateWorkshopDTO.self)
-
-    let workshop = Workshop()
-    workshop.name = dto.name
-    workshop.startTime = dto.startTime
-    workshop.endTime = dto.endTime
-    workshop.capacityMax = dto.capacityMax
-    workshop.totalSubscribers = dto.totalSubscribers
-    workshop.description = dto.description
-    workshop.$category.id = dto.categoryID
+    let workshop = dto.toModel()
 
     try await workshop.create(on: req.db)
-
     return workshop
 }
-//************* fin create ************************************
+
     
-    func show(req: Request) async throws -> Workshop {
+    func show(req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
         guard let workshop = try await Workshop.find(id, on:req.db)
         else{throw Abort(.notFound)}
         
-        return workshop
+        return try workshop.toDTO()
     }
     
-    func update (req: Request) async throws -> Workshop {
+    func update (req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
@@ -87,7 +68,7 @@ func create(req: Request) async throws -> Workshop {
         workshop.category = newWorkshop.category
         
         try await workshop.update(on: req.db)
-        return workshop
+        return try workshop.toDTO()
     }
     
     func delete (req: Request) async throws -> HTTPStatus {
