@@ -7,7 +7,7 @@
 
 import Vapor
 
-struct EventReservationDTO: Content {
+struct WorkshopReservationDTO: Content {
     let status: String
     let eventName: String
     let startTime: Date
