@@ -70,6 +70,7 @@ struct WorkshopController: RouteCollection {
         guard let workshop = try await Workshop.find(id, on: req.db)
         else {throw Abort(.notFound)}
         
+        try await workshop.delete(on: req.db)
         return .noContent
     }
 }
