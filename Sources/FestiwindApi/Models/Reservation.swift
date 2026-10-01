@@ -42,3 +42,15 @@ final class Reservation: Content, Model, @unchecked Sendable {
         self.$workshop.id = workshopID
     }
 }
+
+extension Reservation {
+    func toDTO() throws -> WorkshopReservationDTO {
+        return WorkshopReservationDTO (
+            status: status,
+            eventName: workshop.name,
+            startTime: workshop.startTime,
+            endTime: workshop.endTime
+        )
+    }
+}
+

@@ -33,3 +33,12 @@ final class Category: Content, Model, @unchecked Sendable {
         self.name = name
     }
 }
+
+extension Category {
+    func toUpdateDTO() throws -> CategoryDTO {
+        return CategoryDTO(
+            id: try requireID(),
+            name: name
+        )
+    }
+}

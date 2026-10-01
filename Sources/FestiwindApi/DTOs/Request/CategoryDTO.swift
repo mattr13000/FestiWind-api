@@ -8,9 +8,15 @@
 import Vapor
 import Fluent
 
-struct UpdateCategoryDTO: Content {
-    var id: UUID
+struct CategoryDTO: Content {
+    var id: UUID?
     var name: String
+}
+
+extension CategoryDTO {
+    func toModel() -> Category {
+        return Category(name: name)
+    }
 }
 
 

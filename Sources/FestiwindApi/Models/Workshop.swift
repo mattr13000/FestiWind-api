@@ -53,18 +53,36 @@ final class Workshop: Content, Model, @unchecked Sendable {
     init() {}
     
     init(id: UUID? = nil,
-         name: String,
-         startTime: Date,
-         endTime: Date,
-         capacityMax: Int,
-         totalSubscribers: Int,
-         categoryID: UUID) {
-        self.id = id
-        self.name = name
-        self.startTime = startTime
-        self.endTime = endTime
-        self.capacityMax = capacityMax
-        self.totalSubscribers = totalSubscribers
-        self.$category.id = categoryID
+     name: String,
+     startTime: Date,
+     endTime: Date,
+     capacityMax: Int,
+     totalSubscribers: Int,
+     description: String,
+     categoryID: UUID) {
+    self.id = id
+    self.name = name
+    self.startTime = startTime
+    self.endTime = endTime
+    self.capacityMax = capacityMax
+    self.totalSubscribers = totalSubscribers
+    self.description = description
+    self.$category.id = categoryID
+    }
+}
+
+
+extension Workshop {
+    func toDTO() throws -> WorkshopDTO{
+        return WorkshopDTO (
+            id: try requireID(),
+            name: name,
+            startTime: startTime,
+            endTime: endTime,
+            capacityMax: capacityMax,
+            totalSubscribers: totalSubscribers,
+            description: description,
+            categoryID: $category.id
+        )
     }
 }

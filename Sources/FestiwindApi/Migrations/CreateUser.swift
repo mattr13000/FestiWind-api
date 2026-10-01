@@ -37,6 +37,7 @@ struct CreateUser: AsyncMigration {
                 .date,
                 .required,
             )
+            .unique(on: "email")
             .create()
     }
     

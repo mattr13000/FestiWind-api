@@ -19,6 +19,19 @@ To execute tests, use the following command:
 swift test
 ```
 
+To create local mockup data for route testing, use the following command:
+```bash
+swift run FestiwindApi seed
+```
+
+To clear tables, use the following command: 
+```bash
+swift run App revert --all --yes
+```
+
+# Réapplique le schéma + les seeds
+swift run App auto-migrate
+
 ### See more
 
 - [Vapor Website](https://vapor.codes)
