@@ -70,3 +70,19 @@ final class Workshop: Content, Model, @unchecked Sendable {
     self.$category.id = categoryID
     }
 }
+
+
+extension Workshop {
+    func toDTO() throws -> WorkshopDTO{
+        return WorkshopDTO (
+            id: try requireID(),
+            name: name,
+            startTime: startTime,
+            endTime: endTime,
+            capacityMax: capacityMax,
+            totalSubscribers: totalSubscribers,
+            description: description,
+            categoryID: $category.id
+        )
+    }
+}
