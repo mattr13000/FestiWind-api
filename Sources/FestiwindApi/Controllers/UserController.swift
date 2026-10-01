@@ -24,6 +24,7 @@ struct UserController: RouteCollection {
         
         protectedRoutes.group(":userID") { user in
             user.get(use: getUserById)
+            user.get(use: getUserByEmail)
         }
     }
     
