@@ -17,8 +17,8 @@ func configure(_ app: Application) async throws {
     ), as: .mysql)
 
     app.migrations.add(CreateUser())
-    app.migrations.add(CreateWorkshop())
     app.migrations.add(CreateCategory())
+    app.migrations.add(CreateWorkshop())
     app.migrations.add(CreateReservation())
     
     app.asyncCommands.use(SeedCommand(), as: "seed")

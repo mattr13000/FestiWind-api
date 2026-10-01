@@ -86,7 +86,7 @@ struct SeedCommand: AsyncCommand {
                 try await selectedWorkshop.save(on: database)
             }
         }
-
+        
         context.console.success("Success")
     }
 }
