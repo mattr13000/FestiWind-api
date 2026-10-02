@@ -23,6 +23,17 @@ func configure(_ app: Application) async throws {
     
     app.asyncCommands.use(SeedCommand(), as: "seed")
     
+    let corsConfiguration = CORSMiddleware.Configuration(
+        allowedOrigin: .all,
+        allowedMethods: [.GET, .POST],
+        allowedHeaders: [.accept, .authorization],
+        cacheExpiration: 800
+        )
+    
+    let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
+    
+    app.middleware.use(corsMiddleware)
+
     // register routes
     try routes(app)
 }

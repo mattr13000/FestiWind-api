@@ -56,7 +56,7 @@ struct CategoryController: RouteCollection {
             throw Abort(.notFound, reason: "Category not found.")
         }
 
-        var newCategory = try req.content.decode(CategoryDTO.self)
+        let newCategory = try req.content.decode(CategoryDTO.self)
 
         guard !newCategory.name.isEmpty else {
             throw Abort(.badRequest, reason: "Category is mandatory.")

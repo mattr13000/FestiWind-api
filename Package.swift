@@ -49,3 +49,4 @@ var swiftSettings: [SwiftSetting] { [
     .enableUpcomingFeature("InferIsolatedConformances"),
     .enableUpcomingFeature("ImmutableWeakCaptures"),
 ] }
+
