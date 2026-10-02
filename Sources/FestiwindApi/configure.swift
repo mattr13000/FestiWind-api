@@ -15,6 +15,17 @@ func configure(_ app: Application) async throws {
         password: Environment.get("DATABASE_PASSWORD") ?? "",
         database: Environment.get("DATABASE_NAME") ?? "festiwind_db"
     ), as: .mysql)
+    
+    let corsConfig = CORSMiddleware.Configuration(
+        allowedOrigin: .all, // a remplacer par .custum("origin du front")
+        allowedMethods: [.GET, .POST, .PUT, . DELETE, .OPTIONS],
+        allowedHeaders: [.accept, .authorization, .contentType, .origin],
+        cacheExpiration: 800
+    )
+    
+    let corsMiddleware = CORSMiddleware(configuration: corsConfig)
+    
+    app.middleware.use(corsMiddleware, at: .beginning) //le .begining assure que le cors soit tjs au debut de la chaine des middleware meme si un autre dev en implemente un au dessus de celui ci.
 
     app.migrations.add(CreateUser())
     app.migrations.add(CreateCategory())
