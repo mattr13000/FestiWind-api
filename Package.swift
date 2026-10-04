@@ -16,7 +16,7 @@ let package = Package(
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.0"),
         .package(url: "https://github.com/vapor/jwt.git", from: "4.0.0"),
-        .package(url: "https://github.com/nodes-vapo/gatekeeper.git", from: "4.0.0"),
+        .package(url: "https://github.com/nodes-vapor/gatekeeper.git", from: "4.0.0"),
     ],
     targets: [
         .executableTarget(
