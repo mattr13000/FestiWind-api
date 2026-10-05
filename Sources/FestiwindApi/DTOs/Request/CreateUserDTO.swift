@@ -31,7 +31,7 @@ struct CreateUserDTO: Content {
     let name: String
     var passwordHash: String
     let email: String
-    let role: String?
+    let role: String
     let createdAt: Date?
 }
 
@@ -41,7 +41,7 @@ extension CreateUserDTO {
             name: name,
             passwordHash: passwordHash,
             email: email,
-            role: role ?? "festivalGoer",
+            role: "festivalGoer",
             createdAt: createdAt ?? Date()
         )
     }
