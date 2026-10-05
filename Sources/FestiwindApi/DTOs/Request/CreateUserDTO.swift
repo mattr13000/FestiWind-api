@@ -7,25 +7,6 @@
 
 import Vapor
 
-
-//@ID(key: .id)
-//var id: UUID?
-//
-//@Field(key: "name")
-//var name: String
-//
-//@Field(key: "password_hash")
-//var passwordHash: String
-//
-//@Field(key: "email")
-//var email: String
-//
-//@Field(key: "role")
-//var role: String
-//
-//@Field(key: "created_at")
-//var createdAt: Date
-
 struct CreateUserDTO: Content {
     let id: UUID?
     let name: String
