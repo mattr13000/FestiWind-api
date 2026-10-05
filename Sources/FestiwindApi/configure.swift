@@ -37,16 +37,6 @@ func configure(_ app: Application) async throws {
     app.middleware.use(GatekeeperMiddleware()) // activation du middleware
  
     //------------------- Migrations ----------------------
-
-    let corsConfiguration = CORSMiddleware.Configuration(
-        allowedOrigin: .any(["http://127.0.0.1:8081"]),
-        allowedMethods: [.GET, .POST, .PUT, .DELETE, .OPTIONS],
-        allowedHeaders: [.accept, .authorization, .contentType, .origin],
-        cacheExpiration: 800
-    )
-    
-    app.middleware.use(corsMiddleware)
-    
     app.migrations.add(CreateUser())
     app.migrations.add(CreateCategory())
     app.migrations.add(CreateWorkshop())
