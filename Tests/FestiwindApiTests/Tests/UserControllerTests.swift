@@ -131,7 +131,7 @@ struct UserControllerTests {
             let userToken = try app.generateToken(for: user)
             let userID = try user.requireID()
 
-            try await app.testing().test(.GET, "\(userID)", beforeRequest: { req in
+            try await app.testing().test(.GET, "users/\(userID)", beforeRequest: { req in
                 req.headers.bearerAuthorization = BearerAuthorization(token: userToken)
             }, afterResponse: { res async throws in
                 #expect(res.status == .ok)
