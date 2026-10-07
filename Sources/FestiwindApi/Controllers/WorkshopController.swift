@@ -15,7 +15,7 @@ struct WorkshopController: RouteCollection {
         workshop.post(use: create)
         workshop.group(":id") { workshop in
             workshop.get(use: show)
-            workshop.post(use: update)
+            workshop.put(use: update)
             workshop.delete(use: delete)
         }
     }
