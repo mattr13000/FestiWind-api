@@ -30,18 +30,17 @@ func configure(_ app: Application) async throws {
     
     let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
     
-    app.middleware.use(corsMiddleware)
-    
-    
     //------------------- Middlewares ----------------------
     
     //CORS
     app.middleware.use(corsMiddleware, at: .beginning) //le .begining assure que le cors soit tjs au debut de la chaine des middleware meme si un autre dev en implemente un au dessus de celui ci.
     
-    //Gatekeeper
-    app.caches.use(.memory) //stockage des compteurs
-    app.gatekeeper.config = .init(maxRequests: 100, per: .minute) // contraintes que l'on veut appliquer
-    app.middleware.use(GatekeeperMiddleware()) // activation du middleware
+    if app.environment != .testing {
+        app.caches.use(.memory)
+        app.gatekeeper.config = .init(maxRequests: 100, per: .minute)
+        app.middleware.use(GatekeeperMiddleware())
+    }
+    
  
     //------------------- Migrations ----------------------
     app.migrations.add(CreateUser())
