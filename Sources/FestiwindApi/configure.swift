@@ -17,14 +17,21 @@ func configure(_ app: Application) async throws {
         database: Environment.get("DATABASE_NAME") ?? "festiwind_db"
     ), as: .mysql)
     
-    let corsConfig = CORSMiddleware.Configuration(
-        allowedOrigin: .all, // a remplacer par .custum("origin du front")
-        allowedMethods: [.GET, .POST, .PUT, .DELETE, .OPTIONS],
-        allowedHeaders: [.accept, .authorization, .contentType, .origin],
-        cacheExpiration: 800
-    )
     
-    let corsMiddleware = CORSMiddleware(configuration: corsConfig)
+    //------------------- Services ----------------------
+    app.asyncCommands.use(SeedCommand(), as: "seed")
+    
+    let corsConfiguration = CORSMiddleware.Configuration(
+        allowedOrigin: .all,
+        allowedMethods: [.GET, .POST, .PUT, .DELETE, .OPTIONS],
+        allowedHeaders: [.accept, .authorization],
+        cacheExpiration: 800
+        )
+    
+    let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
+    
+    app.middleware.use(corsMiddleware)
+    
     
     //------------------- Middlewares ----------------------
     
@@ -43,19 +50,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateReservation())
     
     
-    //------------------- Services ----------------------
-    app.asyncCommands.use(SeedCommand(), as: "seed")
-    
-    let corsConfiguration = CORSMiddleware.Configuration(
-        allowedOrigin: .all,
-        allowedMethods: [.GET, .POST, .PUT, .DELETE, .OPTIONS],
-        allowedHeaders: [.accept, .authorization],
-        cacheExpiration: 800
-        )
-    
-    let corsMiddleware = CORSMiddleware(configuration: corsConfiguration)
-    
-    app.middleware.use(corsMiddleware)
+
 
     // register routes
     try routes(app)
