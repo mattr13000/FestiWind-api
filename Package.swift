@@ -37,6 +37,7 @@ let package = Package(
             dependencies: [
                 .target(name: "FestiwindApi"),
                 .product(name: "VaporTesting", package: "vapor"),
+                .product(name: "XCTVapor", package: "vapor")
             ],
             swiftSettings: swiftSettings
         ),
