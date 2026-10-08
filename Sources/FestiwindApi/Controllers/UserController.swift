@@ -23,8 +23,7 @@ struct UserController: RouteCollection {
         protectedRoutes.get("profile", use: profile)
         
         protectedRoutes.group(":userID") { user in
-            user.get(use: getUserById)
-            //user.get(use: getUserByEmail)
+            protectedRoutes.get(":userID", use: getUserById)
         }
     }
     
@@ -77,46 +76,15 @@ struct UserController: RouteCollection {
         return try userDB.toDTO()
     }
     
-  
     func getUserById(req: Request) async throws -> UserDTO {
-        guard let userIdReq = req.parameters.get("userID") as UUID?
-        else {
+        guard let userIdReq = req.parameters.get("userID", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Missing user ID.")
         }
         
-        if let sql = req.db as? (any SQLDatabase) {
-            let users = try await sql.raw("SELECT * FROM users WHERE id = \(bind: userIdReq)")
-                .all(decodingFluent: User.self)
-            
-            guard let foundUser = users.first
-            else {
-                throw Abort(.notFound, reason: "User not found.")
-            }
-            
-            return try foundUser.toDTO()
+        guard let user = try await User.find(userIdReq, on: req.db) else {
+            throw Abort(.notFound, reason: "User not found.")
         }
         
-        throw Abort(.internalServerError)
-    }
-    
-    func getUserByEmail(req: Request) async throws -> UserDTO {
-        guard let email = req.parameters.get("email") as String?
-        else {
-            throw Abort(.badRequest)
-        }
-        
-        if let sql = req.db as? (any SQLDatabase) {
-            let users = try await sql.raw("SELECT * FROM users WHERE email = \(bind: email)")
-                .all(decodingFluent: User.self)
-            
-            guard let user = users.first
-            else {
-                throw Abort(.notFound, reason: "User not found")
-            }
-            
-            return try user.toDTO()
-        }
-        
-        throw Abort(.internalServerError)
+        return try user.toDTO()
     }
 }
