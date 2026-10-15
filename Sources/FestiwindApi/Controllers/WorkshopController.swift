@@ -10,7 +10,7 @@ import Vapor
 
 struct WorkshopController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let workshop = routes.grouped("workshop")
+        let workshop = routes.grouped("workshops")
         workshop.get(use: index)
         workshop.post(use: create)
         workshop.group(":id") { workshop in
