@@ -11,6 +11,14 @@ struct WorkshopDTO: Content {
     var description: String
     var categoryID: UUID
     
+    /* var name: String
+    var startTime: Date
+    var endTime: Date
+    var capacityMax: Int
+    var totalSubscribers: Int
+    var description: String */
+    
+    
     func toModel() -> Workshop {
         let workshop = Workshop (
             name: name,

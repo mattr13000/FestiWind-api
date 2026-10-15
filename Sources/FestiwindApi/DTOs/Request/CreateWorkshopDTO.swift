@@ -6,7 +6,9 @@ struct CreateWorkshopDTO: Content {
     var startTime: Date
     var endTime: Date
     var capacityMax: Int
-    var totalSubscribers: Int
     var description: String
-    var categoryID: UUID
+    var category: String
 }
+
+
+

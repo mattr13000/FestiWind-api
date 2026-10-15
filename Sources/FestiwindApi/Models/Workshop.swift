@@ -65,7 +65,7 @@ final class Workshop: Content, Model, @unchecked Sendable {
     self.startTime = startTime
     self.endTime = endTime
     self.capacityMax = capacityMax
-    self.totalSubscribers = totalSubscribers
+    self.totalSubscribers = 0
     self.description = description
     self.$category.id = categoryID
     }

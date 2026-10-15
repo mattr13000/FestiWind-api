@@ -22,23 +22,23 @@ struct WorkshopController: RouteCollection {
         
 
     func index(req: Request) async throws -> [WorkshopDTO] {
-    let workshops = try await Workshop
+        let workshops = try await Workshop
         .query(on: req.db)
         .with(\.$category)
         .all()
 
         return try workshops.map { try $0.toDTO()
+        }
     }
-}
  
     func create(req: Request) async throws -> Workshop {
-    let dto = try req.content.decode(WorkshopDTO.self)
+        let createWorkshopDTO = try req.content.decode(CreateWorkshopDTO.self)
 
-    let workshop = dto.toModel()
+        let workshop = createWorkshopDTO.toModel()
 
-    try await workshop.create(on: req.db)
-    return workshop
-}
+        try await workshop.create(on: req.db)
+        return workshop
+    }
 
     
     func show(req: Request) async throws -> WorkshopDTO {
