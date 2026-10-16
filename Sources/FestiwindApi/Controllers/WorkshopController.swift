@@ -35,16 +35,17 @@ struct WorkshopController: RouteCollection {
         let dto = try req.content.decode(CreateWorkshopDTO.self)
 
         guard !dto.name.isEmpty else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
+        
         guard dto.endTime > dto.startTime else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: APIError.endTimeGreaterThanStartTime.errorDescription)
         }
         guard dto.capacityMax > 0 else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: APIError.wrongEventCapacity.errorDescription)
         }
         guard try await Category.find(dto.categoryID, on: req.db) != nil else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: APIError.categoryNotFound.errorDescription)
         }
         
         
@@ -64,7 +65,7 @@ struct WorkshopController: RouteCollection {
         return try workshop.toDTO()
     }
     
-    func update (req: Request) async throws -> WorkshopDTO {
+    func update(req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
