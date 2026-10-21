@@ -36,13 +36,24 @@ struct SeedCommand: AsyncCommand {
             try await category.save(on: database)
         }
 
-        let roles = ["user", "user", "user", "admin", "organizer"]
+        let staffUser = User(
+            id: UUID(),
+            name: "Staff",
+            passwordHash: try Bcrypt.hash("staff1234"),
+            email: "staff@festiwind.fr",
+            role: .staff,
+            createdAt: Date()
+        )
+        try await staffUser.save(on: database)
+
+        let roles: [UserRole] = [.festivalGoer, .festivalGoer, .festivalGoer, .staff]
+        let passwordHash = try Bcrypt.hash("password123")
         var users: [User] = []
         for i in 0..<20 {
             let user = User(
                 id: UUID(),
                 name: "Utilisateur \(i)",
-                passwordHash: "hash_fictif",
+                passwordHash: passwordHash,
                 email: "user\(i)@festiwind.fr",
                 role: roles[i % roles.count],
                 createdAt: Date()
@@ -88,5 +99,6 @@ struct SeedCommand: AsyncCommand {
         }
         
         context.console.success("Success")
+        context.console.info("Staff login: staff@festiwind.fr / staff1234")
     }
 }

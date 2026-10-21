@@ -10,20 +10,18 @@ import Vapor
 struct CreateUserDTO: Content {
     let id: UUID?
     let name: String
-    var passwordHash: String
+    let password: String
     let email: String
-    let role: String
-    let createdAt: Date?
 }
 
 extension CreateUserDTO {
-    func toModel() -> User {
+    func toModel(passwordHash: String) -> User {
         return User(
             name: name,
             passwordHash: passwordHash,
             email: email,
-            role: "festivalGoer",
-            createdAt: createdAt ?? Date()
+            role: .festivalGoer,
+            createdAt: Date()
         )
     }
 }
