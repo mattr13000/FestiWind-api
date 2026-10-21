@@ -34,9 +34,9 @@ struct UserController: RouteCollection {
     
     
     func create(req: Request) async throws -> UserDTO {
-        var newUser = try req.content.decode(CreateUserDTO.self)
-        newUser.passwordHash = try Bcrypt.hash(newUser.passwordHash)
-        let userToSave = newUser.toModel()
+        let newUser = try req.content.decode(CreateUserDTO.self)
+        let passwordHash = try Bcrypt.hash(newUser.password)
+        let userToSave = newUser.toModel(passwordHash: passwordHash)
         try await userToSave.save(on: req.db)
         return try userToSave.toDTO()
     }
