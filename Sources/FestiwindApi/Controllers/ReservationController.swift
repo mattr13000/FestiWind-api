@@ -15,7 +15,7 @@ struct ReservationController: RouteCollection {
         let jwtProtectedRoutes = reservations.grouped(JWTMiddleware())
         let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
         
-        reservations.post(use: create)
+        jwtProtectedRoutes.post(use: create)
         
         staff.get(use: index)
         staff.delete(":id", use: delete)
@@ -37,6 +37,11 @@ struct ReservationController: RouteCollection {
     
     func create(req: Request) async throws -> WorkshopReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
+        
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == dto.userID else {
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
+        }
         
         guard let _ = try await User.find(dto.userID, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
@@ -67,7 +72,7 @@ struct ReservationController: RouteCollection {
         
         let payload = try req.auth.require(UserPayload.self)
         guard payload.id == reservation.$user.id else {
-            throw Abort(.forbidden)
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
 
         
@@ -80,7 +85,7 @@ struct ReservationController: RouteCollection {
         
         let payload = try req.auth.require(UserPayload.self)
         guard payload.id == id else {
-            throw Abort(.forbidden)
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
         let reservations = try await Reservation
@@ -102,7 +107,7 @@ struct ReservationController: RouteCollection {
        
         let updateData = try req.content.decode(UpdateReservationDTO.self)
         
-        guard !updateData.status.isEmpty else {
+        guard updateData.status == ReservationStatus.cancelled.rawValue else {
             throw Abort(.badRequest)
         }
         
@@ -112,7 +117,7 @@ struct ReservationController: RouteCollection {
         
         let payload = try req.auth.require(UserPayload.self)
         guard payload.id == reservation.$user.id else {
-            throw Abort(.forbidden)
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
         reservation.status = updateData.status
