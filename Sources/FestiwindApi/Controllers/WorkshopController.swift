@@ -11,10 +11,11 @@ import Vapor
 struct WorkshopController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
         let workshop = routes.grouped("workshops")
+        let staff = workshop.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+        
         workshop.get(use: index)
         workshop.get(":id", use: show)
 
-        let staff = workshop.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
         staff.post(use: create)
         staff.group(":id") { workshop in
             workshop.put(use: update)

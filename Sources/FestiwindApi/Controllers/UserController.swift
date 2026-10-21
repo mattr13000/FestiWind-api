@@ -15,13 +15,14 @@ struct UserController: RouteCollection {
 
     func boot(routes: any RoutesBuilder) throws {
         let users = routes.grouped("users")
+        let authenticated = users.grouped(JWTMiddleware())
+        let staff = authenticated.grouped(RoleMiddleware(allowedRoles: [.staff]))
+        
         users.post(use: create)
         users.post("login", use: login)
 
-        let authenticated = users.grouped(JWTMiddleware())
         authenticated.get("profile", use: profile)
 
-        let staff = authenticated.grouped(RoleMiddleware(allowedRoles: [.staff]))
         staff.get(use: index)
         staff.get(":userID", use: getUserById)
     }

@@ -10,12 +10,11 @@ import Vapor
 
 struct CategoryController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        
         let categories = routes.grouped("categories")
-        
+        let staff = categories.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+
         categories.get(use: index)
 
-        let staff = categories.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
         staff.post(use: create)
 
         staff.group(":id") { category in
@@ -29,7 +28,7 @@ struct CategoryController: RouteCollection {
 
         let categories = try await Category.query(on: req.db).all()
 
-        //        équivalent : return categories.map { category in CategoryDTO(id: category.id, name: category.name) }
+        // équivalent : return categories.map { category in CategoryDTO(id: category.id, name: category.name) }
         return try categories.map { try $0.toUpdateDTO() }
     }
     
@@ -55,7 +54,7 @@ struct CategoryController: RouteCollection {
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Category not found.")
+            throw Abort(.notFound, reason: APIError.categoryNotFound.errorDescription)
         }
 
         let newCategory = try req.content.decode(CategoryDTO.self)
@@ -73,11 +72,11 @@ struct CategoryController: RouteCollection {
     func delete(req: Request) async throws -> HTTPStatus {
 
         guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Identifiant not valid.")
+            throw Abort(.badRequest, reason: APIError.invalidCredentials.errorDescription)
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Category not found.")
+            throw Abort(.notFound, reason: APIError.categoryNotFound.errorDescription)
         }
 
         try await category.delete(on: req.db)

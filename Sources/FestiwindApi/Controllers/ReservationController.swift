@@ -10,15 +10,20 @@ import Fluent
 
 struct ReservationController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let reservations = routes.grouped("reservations")
         
-        reservations.get(use: index)
+        let reservations = routes.grouped("reservations")
+        let jwtProtectedRoutes = reservations.grouped(JWTMiddleware())
+        let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
+        
         reservations.post(use: create)
-        reservations.get("user", ":id", use: userReservations)
-        reservations.group(":id") { reservation in
+        
+        staff.get(use: index)
+        staff.delete(":id", use: delete)
+        jwtProtectedRoutes.get("user", ":id", use: userReservations)
+        
+        jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)
-            reservation.delete(use: delete)
         }
     }
     
@@ -58,9 +63,13 @@ struct ReservationController: RouteCollection {
             .with(\.$workshop)
             .filter(\.$id == id)
             .first()
-                
         else {throw Abort(.notFound)}
         
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == reservation.$user.id else {
+            throw Abort(.forbidden)
+        }
+
         
         return try reservation.toDTO()
     }
@@ -68,6 +77,11 @@ struct ReservationController: RouteCollection {
     func userReservations(req: Request) async throws -> UserReservationsDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
+        
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == id else {
+            throw Abort(.forbidden)
+        }
         
         let reservations = try await Reservation
             .query(on: req.db)
@@ -94,6 +108,11 @@ struct ReservationController: RouteCollection {
         
         guard let reservation = try await Reservation.find(id, on: req.db) else {
             throw Abort(.notFound)
+        }
+        
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == reservation.$user.id else {
+            throw Abort(.forbidden)
         }
         
         reservation.status = updateData.status
