@@ -121,8 +121,6 @@ struct ReservationController: RouteCollection {
         }
         
         reservation.status = updateData.status
-        reservation.$user.id = updateData.userID
-        reservation.$workshop.id = updateData.workshopID
         
         try await reservation.update(on: req.db)
         
