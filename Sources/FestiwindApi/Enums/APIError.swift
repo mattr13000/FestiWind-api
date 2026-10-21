@@ -18,7 +18,6 @@ enum APIError: LocalizedError {
     case invalidToken
     case forbidden
     case userNotFound
-    case cannotChangeOwnRole
 
     var errorDescription: String? {
         switch self {
@@ -42,8 +41,6 @@ enum APIError: LocalizedError {
                 return "You don't have permission to do this"
             case .userNotFound:
                 return "User not found"
-            case .cannotChangeOwnRole:
-                return "You can't change your own role"
         }
     }
 }

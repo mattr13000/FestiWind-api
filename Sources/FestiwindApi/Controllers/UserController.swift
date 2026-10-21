@@ -23,10 +23,7 @@ struct UserController: RouteCollection {
 
         let staff = authenticated.grouped(RoleMiddleware(allowedRoles: [.staff]))
         staff.get(use: index)
-        staff.group(":userID") { user in
-            user.get(use: getUserById)
-            user.patch("role", use: updateRole)
-        }
+        staff.get(":userID", use: getUserById)
     }
 
 
@@ -86,27 +83,6 @@ struct UserController: RouteCollection {
             throw Abort(.notFound, reason: APIError.userNotFound.errorDescription)
         }
 
-        return try user.toDTO()
-    }
-
-    func updateRole(req: Request) async throws -> UserDTO {
-        guard let userIdReq = req.parameters.get("userID", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Missing user ID.")
-        }
-
-        let payload = try req.auth.require(UserPayload.self)
-        guard payload.id != userIdReq else {
-            throw Abort(.forbidden, reason: APIError.cannotChangeOwnRole.errorDescription)
-        }
-
-        let dto = try req.content.decode(UpdateRoleDTO.self)
-
-        guard let user = try await User.find(userIdReq, on: req.db) else {
-            throw Abort(.notFound, reason: APIError.userNotFound.errorDescription)
-        }
-
-        user.role = dto.role
-        try await user.update(on: req.db)
         return try user.toDTO()
     }
 }
