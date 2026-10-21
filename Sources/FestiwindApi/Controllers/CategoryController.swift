@@ -14,9 +14,11 @@ struct CategoryController: RouteCollection {
         let categories = routes.grouped("categories")
         
         categories.get(use: index)
-        categories.post(use: create)
-        
-        categories.group(":id") { category in
+
+        let staff = categories.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+        staff.post(use: create)
+
+        staff.group(":id") { category in
             category.put(use: update)
             category.delete(use: delete)
         }

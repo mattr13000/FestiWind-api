@@ -12,9 +12,11 @@ struct WorkshopController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
         let workshop = routes.grouped("workshops")
         workshop.get(use: index)
-        workshop.post(use: create)
-        workshop.group(":id") { workshop in
-            workshop.get(use: show)
+        workshop.get(":id", use: show)
+
+        let staff = workshop.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+        staff.post(use: create)
+        staff.group(":id") { workshop in
             workshop.put(use: update)
             workshop.delete(use: delete)
         }
