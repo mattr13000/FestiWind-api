@@ -13,7 +13,13 @@ enum APIError: LocalizedError {
     case wrongEventCapacity
     case categoryNotFound
     case nameAlreadyExists
-    
+    case invalidCredentials
+    case missingToken
+    case invalidToken
+    case forbidden
+    case userNotFound
+    case cannotChangeOwnRole
+
     var errorDescription: String? {
         switch self {
             case .emptyName:
@@ -26,6 +32,18 @@ enum APIError: LocalizedError {
                 return "Category not found"
             case .nameAlreadyExists:
                 return "A workshop with this name already exists"
+            case .invalidCredentials:
+                return "Invalid email or password"
+            case .missingToken:
+                return "Missing token"
+            case .invalidToken:
+                return "Invalid or expired token"
+            case .forbidden:
+                return "You don't have permission to do this"
+            case .userNotFound:
+                return "User not found"
+            case .cannotChangeOwnRole:
+                return "You can't change your own role"
         }
     }
 }
