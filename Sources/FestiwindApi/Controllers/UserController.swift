@@ -77,7 +77,7 @@ struct UserController: RouteCollection {
 
     func getUserById(req: Request) async throws -> UserDTO {
         guard let userIdReq = req.parameters.get("userID", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Missing user ID.")
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
 
         guard let user = try await User.find(userIdReq, on: req.db) else {

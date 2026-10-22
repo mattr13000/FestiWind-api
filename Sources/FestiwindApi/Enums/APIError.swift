@@ -8,6 +8,7 @@
 import Foundation
 
 enum APIError: LocalizedError {
+    case badRequest
     case emptyName
     case endTimeGreaterThanStartTime
     case wrongEventCapacity
@@ -21,6 +22,8 @@ enum APIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+            case .badRequest:
+                return "Bad request"
             case .emptyName:
                 return "Name is empty"
             case .endTimeGreaterThanStartTime:

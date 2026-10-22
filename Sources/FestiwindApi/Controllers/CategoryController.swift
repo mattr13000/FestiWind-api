@@ -21,7 +21,6 @@ struct CategoryController: RouteCollection {
             category.put(use: update)
             category.delete(use: delete)
         }
-
     }
     
     func index(req: Request) async throws -> [CategoryDTO] {
@@ -37,7 +36,7 @@ struct CategoryController: RouteCollection {
         let dto = try req.content.decode(CategoryDTO.self)
         
         guard !dto.name.isEmpty else {
-            throw Abort(.badRequest, reason: "the category is mandatory.")
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
         
         let category = dto.toModel()
@@ -47,10 +46,8 @@ struct CategoryController: RouteCollection {
     }
     
     func update(req: Request) async throws -> CategoryDTO {
-        
-
         guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Identifiant not valid.")
+            throw Abort(.badRequest, reason: APIError.badRequest.errorDescription)
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
@@ -60,7 +57,7 @@ struct CategoryController: RouteCollection {
         let newCategory = try req.content.decode(CategoryDTO.self)
 
         guard !newCategory.name.isEmpty else {
-            throw Abort(.badRequest, reason: "Category is mandatory.")
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
         
         category.name = newCategory.name

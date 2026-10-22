@@ -100,5 +100,6 @@ struct SeedCommand: AsyncCommand {
         
         context.console.success("Success")
         context.console.info("Staff login: staff@festiwind.fr / staff1234")
+        context.console.info("FestivalGoer login: user0@festiwind.fr / password123")
     }
 }
