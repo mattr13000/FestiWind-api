@@ -16,15 +16,14 @@ struct ReservationController: RouteCollection {
         let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
         
         jwtProtectedRoutes.post(use: create)
-        
-        staff.get(use: index)
-        staff.delete(":id", use: delete)
         jwtProtectedRoutes.get("user", ":id", use: userReservations)
-        
         jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)
         }
+        
+        staff.get(use: index)
+        staff.delete(":id", use: delete)
     }
     
     func index(req: Request) async throws -> [WorkshopReservationDTO] {
@@ -88,10 +87,16 @@ struct ReservationController: RouteCollection {
             throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
+        let statuses = [
+            ReservationStatus.validated.rawValue,
+            ReservationStatus.pending.rawValue
+        ]
+        
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
             .filter(\.$user.$id == id)
+            .filter(\.$status ~~ statuses)
             .all()
         
         let userReservations = try UserReservationsDTO(reservations:

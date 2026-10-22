@@ -9,6 +9,9 @@ xcuserdata/
 *.xcodeproj/
 *.xcworkspace/xcuserdata/
 
+#VS Code
+Festiwind.code-workspace
+
 # macOS
 .DS_Store
 
