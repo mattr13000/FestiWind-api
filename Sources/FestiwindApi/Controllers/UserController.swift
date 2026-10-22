@@ -67,12 +67,12 @@ struct UserController: RouteCollection {
 
         let payload = try req.auth.require(UserPayload.self)
 
-        guard let userDB = try await User.find(payload.id, on: req.db)
+        guard let user = try await User.find(payload.id, on: req.db)
         else {
             throw Abort(.notFound, reason: APIError.userNotFound.errorDescription)
         }
 
-        return try userDB.toDTO()
+        return try user.toDTO()
     }
 
     func getUserById(req: Request) async throws -> UserDTO {
