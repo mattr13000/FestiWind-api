@@ -36,7 +36,12 @@ To create local mockup data for route testing, use the following command:
 swift run FestiwindApi seed
 ```
 
-To reset the database from scratch (needed after a migration file was changed):
+To test routes that requires authentication, after migration: 
+
+Staff account: staff@frestiwind.fr / staff1234
+User account: user0@festiwind.fr / password123
+
+To reset the database:
 ```bash
 swift run FestiwindApi migrate --revert --yes
 swift run FestiwindApi migrate --yes
