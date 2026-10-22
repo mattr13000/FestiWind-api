@@ -82,7 +82,7 @@ struct WorkshopController: RouteCollection {
         workshop.description = newWorkshop.description
         workshop.capacityMax = newWorkshop.capacityMax
         workshop.totalSubscribers = newWorkshop.totalSubscribers
-        workshop.category.id = newWorkshop.$category.id
+        workshop.$category.id = newWorkshop.$category.id
         
         try await workshop.update(on: req.db)
         return try workshop.toDTO()
