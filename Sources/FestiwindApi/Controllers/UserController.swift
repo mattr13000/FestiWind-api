@@ -49,12 +49,12 @@ struct UserController: RouteCollection {
             .filter(\.$email == userRequest.email)
             .first()
         else {
-            throw Abort(.notFound, reason: "User not found.")
-        }
+            throw Abort(.unauthorized, reason: "Unable to sign in to your account")
+        }//we switch the error notFound to unauthorized and the error message to dont give information if the mail exist in the back.
   
         guard try Bcrypt.verify(userRequest.password, created: userDB.passwordHash)
         else {
-            throw Abort(.notFound, reason: "Wrong password.")
+            throw Abort(.unauthorized, reason: "Unable to sign in to your account")
         }
         
         let payload = UserPayload(id: userDB.id!)
