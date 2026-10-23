@@ -70,7 +70,7 @@ struct CategoryController: RouteCollection {
     func delete(req: Request) async throws -> HTTPStatus {
 
         guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: APIError.invalidCredentials.errorDescription)
+            throw Abort(.badRequest, reason: APIError.badRequest.errorDescription)
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
