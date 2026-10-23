@@ -47,10 +47,8 @@ struct UserControllerTests {
             let createDTO = CreateUserDTO(
                 id: nil,
                 name: "New User",
-                passwordHash: "supersecurepassword",
-                email: "new@test.com",
-                role: "festivalGoer",
-                createdAt: Date()
+                password: "supersecurepassword",
+                email: "new@test.com"
             )
 
             try await app.testing().test(.POST, "users", beforeRequest: { req in
@@ -60,6 +58,7 @@ struct UserControllerTests {
                 let userDTO = try res.content.decode(UserDTO.self)
                 #expect(userDTO.email == "new@test.com")
                 #expect(userDTO.name == "New User")
+                #expect(userDTO.role == .festivalGoer)
             })
         }
     }

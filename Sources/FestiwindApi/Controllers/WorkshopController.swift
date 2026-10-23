@@ -10,11 +10,14 @@ import Vapor
 
 struct WorkshopController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let workshop = routes.grouped("workshop")
+        let workshop = routes.grouped("workshops")
+        let staff = workshop.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+        
         workshop.get(use: index)
-        workshop.post(use: create)
-        workshop.group(":id") { workshop in
-            workshop.get(use: show)
+        workshop.get(":id", use: show)
+
+        staff.post(use: create)
+        staff.group(":id") { workshop in
             workshop.put(use: update)
             workshop.delete(use: delete)
         }
@@ -22,23 +25,37 @@ struct WorkshopController: RouteCollection {
         
 
     func index(req: Request) async throws -> [WorkshopDTO] {
-    let workshops = try await Workshop
-        .query(on: req.db)
-        .with(\.$category)
-        .all()
+        let workshops = try await Workshop
+            .query(on: req.db)
+            .with(\.$category)
+            .all()
 
         return try workshops.map { try $0.toDTO()
+        }
     }
-}
  
-    func create(req: Request) async throws -> Workshop {
-    let dto = try req.content.decode(WorkshopDTO.self)
+    func create(req: Request) async throws -> WorkshopDTO {
+        let dto = try req.content.decode(CreateWorkshopDTO.self)
 
-    let workshop = dto.toModel()
-
-    try await workshop.create(on: req.db)
-    return workshop
-}
+        guard !dto.name.isEmpty else {
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
+        }
+        
+        guard dto.endTime > dto.startTime else {
+            throw Abort(.badRequest, reason: APIError.endTimeGreaterThanStartTime.errorDescription)
+        }
+        guard dto.capacityMax > 0 else {
+            throw Abort(.badRequest, reason: APIError.wrongEventCapacity.errorDescription)
+        }
+        guard try await Category.find(dto.categoryID, on: req.db) != nil else {
+            throw Abort(.badRequest, reason: APIError.categoryNotFound.errorDescription)
+        }
+        
+        
+        let workshop = dto.toModel()
+        try await workshop.create(on: req.db)
+        return try workshop.toDTO()
+    }
 
     
     func show(req: Request) async throws -> WorkshopDTO {
@@ -51,7 +68,7 @@ struct WorkshopController: RouteCollection {
         return try workshop.toDTO()
     }
     
-    func update (req: Request) async throws -> WorkshopDTO {
+    func update(req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
@@ -65,7 +82,7 @@ struct WorkshopController: RouteCollection {
         workshop.description = newWorkshop.description
         workshop.capacityMax = newWorkshop.capacityMax
         workshop.totalSubscribers = newWorkshop.totalSubscribers
-        workshop.category.id = newWorkshop.$category.id
+        workshop.$category.id = newWorkshop.$category.id
         
         try await workshop.update(on: req.db)
         return try workshop.toDTO()
