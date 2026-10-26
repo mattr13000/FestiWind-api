@@ -9,6 +9,6 @@ struct WorkshopDTO: Content {
     var capacityMax: Int
     var totalSubscribers: Int
     var description: String
-    var categoryID: UUID
+    var category: String
 }
 
