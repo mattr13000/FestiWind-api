@@ -39,6 +39,7 @@ struct WorkshopControllerTests {
             }
         }
     }
+    
     @Test("POST /workshops - Create a workshop")
     func createWorkshop() async throws {
         try await withAppIncludingDB() { app in
