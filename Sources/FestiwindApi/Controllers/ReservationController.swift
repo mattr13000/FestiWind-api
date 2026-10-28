@@ -26,6 +26,7 @@ struct ReservationController: RouteCollection {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .all()
         return try reservations.map { try $0.toDTO() }
     }
