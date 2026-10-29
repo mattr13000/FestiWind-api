@@ -13,7 +13,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent.git", from: "4.13.0"),
         // 🐬 Fluent driver for MySQL.
         .package(url: "https://github.com/vapor/fluent-mysql-driver.git", from: "4.8.0"),
-        // Fluent driver for SQLite.
+        // 🪶 Fluent driver for SQLite
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.5.0"),
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.101.0"),
