@@ -16,7 +16,7 @@ extension Application {
         name: String = "Didier",
         password: String = "password123",
         email: String = "didier@test.com",
-        role: String = "festivalGoer",
+        role: UserRole = .festivalGoer,
         createdAt: Date = Date()
     ) async throws -> User {
         let hashedPassword = try Bcrypt.hash(password)
@@ -35,13 +35,13 @@ extension Application {
     @discardableResult
     func createUsers(
         count: Int,
-        role: String = "festivalGoer"
+        role: UserRole = .festivalGoer
     ) async throws -> [User] {
         var users: [User] = []
         for i in 1...count {
             let user = try await self.createUser(
                 name: "User Test \(i)",
-                email: "user\(i))@test.com",
+                email: "user\(i)@test.com",
                 role: role
             )
             users.append(user)
@@ -50,7 +50,7 @@ extension Application {
     }
     
     func generateToken(for user: User) throws -> String {
-            let payload = UserPayload(id: try user.requireID())
+        let payload = UserPayload(id: try user.requireID(), role: user.role)
             let signer = JWTSigner.hs256(key: "stringmaisadressmailaussiazertyavecselpoivresaladtomatogno")
             return try signer.sign(payload)
         }

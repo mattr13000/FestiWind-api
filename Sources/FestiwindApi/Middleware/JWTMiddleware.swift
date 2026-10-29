@@ -14,17 +14,15 @@ final class JWTMiddleware: Middleware {
     ) -> EventLoopFuture<Response> {
         
         guard let token = request.headers.bearerAuthorization?.token else {
-            return request.eventLoop.future(error: Abort(.unauthorized, reason: "Missing token."))
+            return request.eventLoop.future(error: Abort(.unauthorized, reason: APIError.missingToken.errorDescription))
         }
-        
-        let signer = JWTSigner.hs256(key: "stringmaisadressmailaussiazertyavecselpoivresaladtomatogno")
-        
+
         let payload: UserPayload
-        
+
         do {
-            payload = try signer.verify(String(token), as: UserPayload.self)
+            payload = try request.jwt.verify(token, as: UserPayload.self)
         } catch {
-            return request.eventLoop.future(error: Abort(.unauthorized, reason: "Invalid token."))
+            return request.eventLoop.future(error: Abort(.unauthorized, reason: APIError.invalidToken.errorDescription))
         }
         
 

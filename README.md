@@ -19,18 +19,34 @@ To execute tests, use the following command:
 swift test
 ```
 
+## Database
+
+To create the tables, use the following command:
+```bash
+swift run FestiwindApi migrate --yes
+```
+
+To clear tables (reverts every migration), use the following command:
+```bash
+swift run FestiwindApi migrate --revert --yes
+```
+
 To create local mockup data for route testing, use the following command:
 ```bash
 swift run FestiwindApi seed
 ```
 
-To clear tables, use the following command: 
-```bash
-swift run App revert --all --yes
-```
+To test routes that requires authentication, after migration: 
 
-# Réapplique le schéma + les seeds
-swift run App auto-migrate
+Staff account: staff@frestiwind.fr / staff1234
+User account: user0@festiwind.fr / password123
+
+To reset the database:
+```bash
+swift run FestiwindApi migrate --revert --yes
+swift run FestiwindApi migrate --yes
+swift run FestiwindApi seed
+```
 
 ### See more
 
