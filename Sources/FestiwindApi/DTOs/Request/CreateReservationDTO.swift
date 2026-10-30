@@ -15,7 +15,7 @@ struct CreateReservationDTO: Content {
 extension CreateReservationDTO {
     func toModel() throws -> Reservation {
         return Reservation (
-            status: "Ok",
+            status: ReservationStatus.pending.rawValue,
             userID: userID,
             workshopID: workshopID
         )
