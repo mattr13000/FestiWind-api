@@ -33,7 +33,7 @@ struct ReservationController: RouteCollection {
     func create(req: Request) async throws -> WorkshopReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
-        guard let _ = try await User.find(dto.userID, on: req.db),
+        guard let user = try await User.find(dto.userID, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
@@ -44,6 +44,7 @@ struct ReservationController: RouteCollection {
         try await reservation.create(on: req.db)
         
         reservation.$workshop.value = workshop
+        reservation.$user.value = user
         
         return try reservation.toDTO()
     }
@@ -56,6 +57,7 @@ struct ReservationController: RouteCollection {
         guard let reservation = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .filter(\.$id == id)
             .first()
                 
@@ -72,6 +74,7 @@ struct ReservationController: RouteCollection {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .filter(\.$user.$id == id)
             .all()
         
@@ -103,6 +106,8 @@ struct ReservationController: RouteCollection {
         try await reservation.update(on: req.db)
         
         try await reservation.$workshop.load(on: req.db)
+        
+        try await reservation.$user.load(on: req.db)
         
         return try reservation.toDTO()
     }
