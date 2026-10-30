@@ -54,6 +54,7 @@ struct ReservationController: RouteCollection {
         try await reservation.create(on: req.db)
         
         reservation.$workshop.value = workshop
+        reservation.$user.value = user
         
         return try reservation.toDTO()
     }
@@ -66,6 +67,7 @@ struct ReservationController: RouteCollection {
         guard let reservation = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .filter(\.$id == id)
             .first()
         else {throw Abort(.notFound)}
@@ -96,6 +98,7 @@ struct ReservationController: RouteCollection {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .filter(\.$user.$id == id)
             .filter(\.$status ~~ statuses)
             .all()
@@ -131,6 +134,8 @@ struct ReservationController: RouteCollection {
         try await reservation.update(on: req.db)
         
         try await reservation.$workshop.load(on: req.db)
+        
+        try await reservation.$user.load(on: req.db)
         
         return try reservation.toDTO()
     }
