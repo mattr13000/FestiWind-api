@@ -16,6 +16,7 @@ struct ReservationController: RouteCollection {
         let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
         
         jwtProtectedRoutes.post(use: create)
+        jwtProtectedRoutes.get("me", use: userReservations)
         jwtProtectedRoutes.get("user", ":id", use: userReservations)
         jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
@@ -43,7 +44,7 @@ struct ReservationController: RouteCollection {
             throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
-        guard let _ = try await User.find(dto.userID, on: req.db),
+        guard let user = try await User.find(dto.userID, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)

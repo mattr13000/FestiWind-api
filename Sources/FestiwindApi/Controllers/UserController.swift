@@ -20,7 +20,6 @@ struct UserController: RouteCollection {
         
         users.post(use: create)
         users.post("login", use: login)
-
         authenticated.get("profile", use: profile)
 
         staff.get(use: index)
