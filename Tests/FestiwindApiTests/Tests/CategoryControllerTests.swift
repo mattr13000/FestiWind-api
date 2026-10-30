@@ -37,17 +37,17 @@ struct CategoryControllerTests {
         }
     }
     
-    @Test("POST /categories - Expecting bad request")
+    @Test("POST /categories - unauthorized")
     func postCategoryNegative() async throws{
         try await withApp { app in
             let categoryDTO = CategoryDTO(
                 id: UUID(),
-                name: ""
+                name: "Bandito"
             )
             try await app.testing().test(.POST, "categories", beforeRequest: { req in
-                try req.content.encode(categoryDTO)
+                try req.content.encode(categoryDTO, as: .json)
             }, afterResponse: { res async throws in
-                #expect(res.status == .badRequest)
+                #expect(res.status == .unauthorized)
             })
         }
     }
@@ -55,11 +55,21 @@ struct CategoryControllerTests {
     @Test("POST /categories - Expecting ok")
     func postCategoryPositive() async throws{
         try await withApp { app in
+            
+            let user = try await app.createUser(
+                            email: "staff_post@test.com",
+                            role: .staff
+                        )
+            
+            let token = try app.generateToken(for: user)
+            
             let categoryDTO = CategoryDTO(
                 id: UUID(),
                 name: "Didierbogoss"
             )
             try await app.testing().test(.POST, "categories", beforeRequest: { req in
+                req.headers.bearerAuthorization =
+                    BearerAuthorization(token: token)
                 try req.content.encode(categoryDTO)
             }, afterResponse: { res async throws in
                 #expect(res.status == .ok)
@@ -70,6 +80,12 @@ struct CategoryControllerTests {
     @Test("DELETE /categories - Expecting noContent")
     func deleteCategory() async throws{
         try await withApp { app in
+            let user = try await app.createUser(
+                            email: "staff_delete@test.com",
+                            role: .staff
+                        )
+                        let token = try app.generateToken(for: user)
+            
             let categoryDTO = CategoryDTO(
                 id: UUID(),
                 name: "Didierbogoss"
@@ -77,15 +93,24 @@ struct CategoryControllerTests {
             let category = categoryDTO.toModel()
             try await category.save(on: app.db)
             let categoryID = try category.requireID().uuidString
-            try await app.testing().test(.DELETE, "categories/\(categoryID)", afterResponse: { res async throws in
-                #expect(res.status == .noContent)
-            })
+            
+            try await app.testing().test(.DELETE, "categories/\(categoryID)", beforeRequest: { req in
+                            req.headers.bearerAuthorization = BearerAuthorization(token: token)
+                        }, afterResponse: { res async throws in
+                            #expect(res.status == .noContent)
+                        })
         }
     }
     
     @Test("UPDATE /categories")
     func updateCategory() async throws{
         try await withApp { app in
+            let user = try await app.createUser(
+                            email: "staff_post@test.com",
+                            role: .staff
+                        )
+            let token = try app.generateToken(for: user)
+            
             let categoryDTO = CategoryDTO(
                 id: UUID(),
                 name: "Didierbogoss"
@@ -93,7 +118,9 @@ struct CategoryControllerTests {
             let category = categoryDTO.toModel()
             try await category.save(on: app.db)
             let categoryID = try category.requireID().uuidString
+            
             try await app.testing().test(.PUT, "categories/\(categoryID)", beforeRequest: { req in
+                req.headers.bearerAuthorization = BearerAuthorization(token: token)
                 let updatedDTO = CategoryDTO(id: categoryDTO.id, name: "Didiermoche")
                 try req.content.encode(updatedDTO)
             }, afterResponse: { res async throws in
