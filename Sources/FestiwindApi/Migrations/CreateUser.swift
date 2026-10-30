@@ -9,6 +9,12 @@ import Fluent
 
 struct CreateUser: AsyncMigration {
     func prepare(on database: any Database) async throws {
+        let role = try await database
+            .enum("user_role")
+            .case("staff")
+            .case("festivalGoer")
+            .create()
+
         try await database
             .schema(User.schema)
             .id()
@@ -29,7 +35,7 @@ struct CreateUser: AsyncMigration {
             )
             .field(
                 "role",
-                .string,
+                role,
                 .required,
             )
             .field(
@@ -37,12 +43,17 @@ struct CreateUser: AsyncMigration {
                 .date,
                 .required,
             )
+            .unique(on: "email")
             .create()
     }
     
     func revert(on database: any Database) async throws {
         try await database
             .schema(User.schema)
+            .delete()
+
+        try await database
+            .enum("user_role")
             .delete()
     }
 }

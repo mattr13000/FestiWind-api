@@ -10,22 +10,27 @@ import Fluent
 
 struct ReservationController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let reservations = routes.grouped("reservations")
         
-        reservations.get(use: index)
-        reservations.post(use: create)
-        reservations.get("user", ":id", use: userReservations)
-        reservations.group(":id") { reservation in
+        let reservations = routes.grouped("reservations")
+        let jwtProtectedRoutes = reservations.grouped(JWTMiddleware())
+        let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
+        
+        jwtProtectedRoutes.post(use: create)
+        jwtProtectedRoutes.get("user", ":id", use: userReservations)
+        jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)
-            reservation.delete(use: delete)
         }
+        
+        staff.get(use: index)
+        staff.delete(":id", use: delete)
     }
     
     func index(req: Request) async throws -> [WorkshopReservationDTO] {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .all()
         return try reservations.map { try $0.toDTO() }
     }
@@ -33,7 +38,12 @@ struct ReservationController: RouteCollection {
     func create(req: Request) async throws -> WorkshopReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
-        guard let user = try await User.find(dto.userID, on: req.db),
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == dto.userID else {
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
+        }
+        
+        guard let _ = try await User.find(dto.userID, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
@@ -60,9 +70,13 @@ struct ReservationController: RouteCollection {
             .with(\.$user)
             .filter(\.$id == id)
             .first()
-                
         else {throw Abort(.notFound)}
         
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == reservation.$user.id else {
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
+        }
+
         
         return try reservation.toDTO()
     }
@@ -71,11 +85,22 @@ struct ReservationController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == id else {
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
+        }
+        
+        let statuses = [
+            ReservationStatus.validated.rawValue,
+            ReservationStatus.pending.rawValue
+        ]
+        
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
             .with(\.$user)
             .filter(\.$user.$id == id)
+            .filter(\.$status ~~ statuses)
             .all()
         
         let userReservations = try UserReservationsDTO(reservations:
@@ -91,7 +116,7 @@ struct ReservationController: RouteCollection {
        
         let updateData = try req.content.decode(UpdateReservationDTO.self)
         
-        guard !updateData.status.isEmpty else {
+        guard updateData.status == ReservationStatus.cancelled.rawValue else {
             throw Abort(.badRequest)
         }
         
@@ -99,9 +124,12 @@ struct ReservationController: RouteCollection {
             throw Abort(.notFound)
         }
         
+        let payload = try req.auth.require(UserPayload.self)
+        guard payload.id == reservation.$user.id else {
+            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
+        }
+        
         reservation.status = updateData.status
-        reservation.$user.id = updateData.userID
-        reservation.$workshop.id = updateData.workshopID
         
         try await reservation.update(on: req.db)
         

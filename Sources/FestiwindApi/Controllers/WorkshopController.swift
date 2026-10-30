@@ -10,67 +10,65 @@ import Vapor
 
 struct WorkshopController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        let workshop = routes.grouped("workshop")
+        let workshop = routes.grouped("workshops")
+        let staff = workshop.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+        
         workshop.get(use: index)
-        workshop.post(use: create)
-        workshop.group(":id") { workshop in
-            workshop.get(use: show)
-            workshop.post(use: update)
+        workshop.get(":id", use: show)
+
+        staff.post(use: create)
+        staff.group(":id") { workshop in
+            workshop.put(use: update)
             workshop.delete(use: delete)
         }
     }
         
-    // ************ index **********************************
+
     func index(req: Request) async throws -> [WorkshopDTO] {
-    let workshops = try await Workshop
-        .query(on: req.db)
-        .all()
+        let workshops = try await Workshop
+            .query(on: req.db)
+            .with(\.$category)
+            .all()
 
-    return workshops.map { workshop in
-        WorkshopDTO(
-            id: workshop.id,
-            name: workshop.name,
-            startTime: workshop.startTime,
-            endTime: workshop.endTime,
-            capacityMax: workshop.capacityMax,
-            totalSubscribers: workshop.totalSubscribers,
-            description: workshop.description,
-            categoryID: workshop.$category.id
-        )
+        return try workshops.map { try $0.toDTO()
+        }
     }
-}
-   // ************ fin index **********************************
+ 
+    func create(req: Request) async throws -> WorkshopDTO {
+        let dto = try req.content.decode(CreateWorkshopDTO.self)
 
-//*************  Create ************************************
-func create(req: Request) async throws -> Workshop {
-    let dto = try req.content.decode(CreateWorkshopDTO.self)
+        guard !dto.name.isEmpty else {
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
+        }
+        
+        guard dto.endTime > dto.startTime else {
+            throw Abort(.badRequest, reason: APIError.endTimeGreaterThanStartTime.errorDescription)
+        }
+        guard dto.capacityMax > 0 else {
+            throw Abort(.badRequest, reason: APIError.wrongEventCapacity.errorDescription)
+        }
+        guard try await Category.find(dto.categoryID, on: req.db) != nil else {
+            throw Abort(.badRequest, reason: APIError.categoryNotFound.errorDescription)
+        }
+        
+        
+        let workshop = dto.toModel()
+        try await workshop.create(on: req.db)
+        return try workshop.toDTO()
+    }
 
-    let workshop = Workshop()
-    workshop.name = dto.name
-    workshop.startTime = dto.startTime
-    workshop.endTime = dto.endTime
-    workshop.capacityMax = dto.capacityMax
-    workshop.totalSubscribers = dto.totalSubscribers
-    workshop.description = dto.description
-    workshop.$category.id = dto.categoryID
-
-    try await workshop.create(on: req.db)
-
-    return workshop
-}
-//************* fin create ************************************
     
-    func show(req: Request) async throws -> Workshop {
+    func show(req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
         guard let workshop = try await Workshop.find(id, on:req.db)
         else{throw Abort(.notFound)}
         
-        return workshop
+        return try workshop.toDTO()
     }
     
-    func update (req: Request) async throws -> Workshop {
+    func update(req: Request) async throws -> WorkshopDTO {
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
@@ -84,10 +82,10 @@ func create(req: Request) async throws -> Workshop {
         workshop.description = newWorkshop.description
         workshop.capacityMax = newWorkshop.capacityMax
         workshop.totalSubscribers = newWorkshop.totalSubscribers
-        workshop.category = newWorkshop.category
+        workshop.$category.id = newWorkshop.$category.id
         
         try await workshop.update(on: req.db)
-        return workshop
+        return try workshop.toDTO()
     }
     
     func delete (req: Request) async throws -> HTTPStatus {

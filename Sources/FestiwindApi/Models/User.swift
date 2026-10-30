@@ -33,8 +33,8 @@ final class User: Content, Model, @unchecked Sendable {
     @Field(key: "email")
     var email: String
     
-    @Field(key: "role")
-    var role: String
+    @Enum(key: "role")
+    var role: UserRole
     
     @Field(key: "created_at")
     var createdAt: Date
@@ -48,7 +48,7 @@ final class User: Content, Model, @unchecked Sendable {
          name: String,
          passwordHash: String,
          email: String,
-         role: String,
+         role: UserRole,
          createdAt: Date) {
         self.id = id
         self.name = name
@@ -56,5 +56,16 @@ final class User: Content, Model, @unchecked Sendable {
         self.email = email
         self.role = role
         self.createdAt = createdAt
+    }
+}
+
+extension User {
+    func toDTO() throws -> UserDTO {
+        return UserDTO(
+            id: try requireID(),
+            name: name,
+            email: email,
+            role: role,
+            createdAt: createdAt)
     }
 }
