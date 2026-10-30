@@ -51,7 +51,6 @@ extension Application {
     
     func generateToken(for user: User) throws -> String {
         let payload = UserPayload(id: try user.requireID(), role: user.role)
-            let signer = JWTSigner.hs256(key: "stringmaisadressmailaussiazertyavecselpoivresaladtomatogno")
-            return try signer.sign(payload)
+        return try self.jwt.signers.sign(payload)
         }
 }
