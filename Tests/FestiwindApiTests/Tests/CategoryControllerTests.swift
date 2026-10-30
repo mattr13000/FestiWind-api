@@ -52,7 +52,7 @@ struct CategoryControllerTests {
         }
     }
     
-    @Test("POST /categories - Expecting created")
+    @Test("POST /categories - Expecting ok")
     func postCategoryPositive() async throws{
         try await withApp { app in
             
