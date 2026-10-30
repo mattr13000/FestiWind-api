@@ -60,7 +60,6 @@ struct CategoryControllerTests {
                             email: "staff_post@test.com",
                             role: .staff
                         )
-            
             let token = try app.generateToken(for: user)
             
             let categoryDTO = CategoryDTO(

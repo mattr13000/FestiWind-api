@@ -44,7 +44,7 @@ struct ReservationController: RouteCollection {
         }
         
         guard let _ = try await User.find(dto.userID, on: req.db),
-              let workshop = try await Workshop.find(dto.workshopID, on: req.db)
+              let _ = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
         }
@@ -53,9 +53,15 @@ struct ReservationController: RouteCollection {
         
         try await reservation.create(on: req.db)
         
-        reservation.$workshop.value = workshop
-        
-        return try reservation.toDTO()
+        guard let savedReservation = try await Reservation.query(on: req.db)
+                    .with(\.$user)
+                    .with(\.$workshop)
+                    .filter(\.$id == reservation.requireID())
+                    .first() else {
+                    throw Abort(.internalServerError)
+                }
+                 
+                return try savedReservation.toDTO()
     }
     
     func show(req: Request) async throws -> WorkshopReservationDTO {
