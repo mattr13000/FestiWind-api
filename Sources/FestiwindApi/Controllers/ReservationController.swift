@@ -45,8 +45,20 @@ struct ReservationController: RouteCollection {
         else {
             throw Abort(.notFound)
         }
+        
         guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else
         {
+            throw Abort(.conflict)
+        }
+        
+        guard let reservations = try await Reservation
+            .query(on: req.db)
+            .with(\.$workshop)
+            .with(\.$user)
+            .filter(\.$user.$id == payload.id)
+            .filter(\.$workshop.$id == workshop.id!)
+            .first()
+        else {
             throw Abort(.conflict)
         }
         
