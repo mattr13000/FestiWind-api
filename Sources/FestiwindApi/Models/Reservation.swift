@@ -49,7 +49,7 @@ extension Reservation {
             id: try requireID(),
             status: status,
             userName: user.name,
-            workshopID: workshop.id!,
+            workshopID: $workshop.id,
             workshopName: workshop.name,
             startTime: workshop.startTime,
             endTime: workshop.endTime
