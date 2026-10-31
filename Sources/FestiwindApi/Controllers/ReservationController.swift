@@ -45,7 +45,11 @@ struct ReservationController: RouteCollection {
         else {
             throw Abort(.notFound)
         }
-
+        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else
+        {
+            throw Abort(.conflict)
+        }
+        
         let reservation = try dto.toModel(userID: payload.id)
         
         try await reservation.create(on: req.db)
@@ -57,7 +61,6 @@ struct ReservationController: RouteCollection {
     }
     
     func show(req: Request) async throws -> WorkshopReservationDTO {
-        
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
