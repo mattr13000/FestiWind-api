@@ -26,7 +26,7 @@ struct ReservationController: RouteCollection {
         staff.delete(":id", use: delete)
     }
     
-    func index(req: Request) async throws -> [WorkshopReservationDTO] {
+    func index(req: Request) async throws -> [ReservationDTO] {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
@@ -35,7 +35,7 @@ struct ReservationController: RouteCollection {
         return try reservations.map { try $0.toDTO() }
     }
     
-    func create(req: Request) async throws -> WorkshopReservationDTO {
+    func create(req: Request) async throws -> ReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
         let payload = try req.auth.require(UserPayload.self)
@@ -75,7 +75,7 @@ struct ReservationController: RouteCollection {
         return try reservation.toDTO()
     }
     
-    func show(req: Request) async throws -> WorkshopReservationDTO {
+    func show(req: Request) async throws -> ReservationDTO {
 
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
@@ -113,7 +113,7 @@ struct ReservationController: RouteCollection {
         return userReservations
     }
     
-    func update(req: Request) async throws -> WorkshopReservationDTO {
+    func update(req: Request) async throws -> ReservationDTO {
         
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest)

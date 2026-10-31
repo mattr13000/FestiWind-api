@@ -7,7 +7,7 @@
 
 import Vapor
 
-struct WorkshopReservationDTO: Content {
+struct ReservationDTO: Content {
     let id: UUID
     let status: String
     let userName: String

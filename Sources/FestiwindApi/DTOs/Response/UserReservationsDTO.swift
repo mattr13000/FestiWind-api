@@ -8,9 +8,9 @@
 import Vapor
 
 struct UserReservationsDTO: Content {
-    let workshopReservationsDTO: [WorkshopReservationDTO]
+    let reservationDTO: [ReservationDTO]
     
     init(reservations: [Reservation]) throws {
-        self.workshopReservationsDTO = try reservations.map({try $0.toDTO()})
+        self.reservationDTO = try reservations.map({try $0.toDTO()})
    }
 }
