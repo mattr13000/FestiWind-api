@@ -19,6 +19,8 @@ enum APIError: LocalizedError {
     case invalidToken
     case forbidden
     case userNotFound
+    case alreadyBooked
+    case workshopFull
 
     var errorDescription: String? {
         switch self {
@@ -44,6 +46,10 @@ enum APIError: LocalizedError {
                 return "You don't have permission to do this"
             case .userNotFound:
                 return "User not found"
+            case .alreadyBooked:
+                return "You already booked this workshop"
+            case .workshopFull:
+                return "This workshop is full"
         }
     }
 }

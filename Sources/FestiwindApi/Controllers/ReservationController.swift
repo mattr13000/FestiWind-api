@@ -46,22 +46,21 @@ struct ReservationController: RouteCollection {
             throw Abort(.notFound)
         }
         
-        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else
-        {
-            throw Abort(.conflict)
-        }
-        
-        guard let reservations = try await Reservation
+        let existingReservation = try await Reservation
             .query(on: req.db)
-            .with(\.$workshop)
-            .with(\.$user)
             .filter(\.$user.$id == payload.id)
-            .filter(\.$workshop.$id == workshop.id!)
+            .filter(\.$workshop.$id == dto.workshopID)
+            .filter(\.$status != ReservationStatus.cancelled.rawValue)
             .first()
-        else {
-            throw Abort(.conflict)
+
+        guard existingReservation == nil else {
+            throw Abort(.conflict, reason: APIError.alreadyBooked.errorDescription)
         }
-        
+
+        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else {
+            throw Abort(.conflict, reason: APIError.workshopFull.errorDescription)
+        }
+
         let reservation = try dto.toModel(userID: payload.id)
         
         try await reservation.create(on: req.db)
@@ -73,6 +72,7 @@ struct ReservationController: RouteCollection {
     }
     
     func show(req: Request) async throws -> WorkshopReservationDTO {
+
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
