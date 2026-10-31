@@ -17,7 +17,6 @@ struct ReservationController: RouteCollection {
         
         jwtProtectedRoutes.post(use: create)
         jwtProtectedRoutes.get("me", use: userReservations)
-        jwtProtectedRoutes.get("user", ":id", use: userReservations)
         jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)
@@ -40,17 +39,14 @@ struct ReservationController: RouteCollection {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
         let payload = try req.auth.require(UserPayload.self)
-        guard payload.id == dto.userID else {
-            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
-        }
-        
-        guard let user = try await User.find(dto.userID, on: req.db),
+
+        guard let user = try await User.find(payload.id, on: req.db),
               let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
         }
-        
-        let reservation = try dto.toModel()
+
+        let reservation = try dto.toModel(userID: payload.id)
         
         try await reservation.create(on: req.db)
         
@@ -83,14 +79,8 @@ struct ReservationController: RouteCollection {
     }
     
     func userReservations(req: Request) async throws -> UserReservationsDTO {
-        guard let id = req.parameters.get("id", as: UUID.self)
-        else {throw Abort(.badRequest)}
-        
         let payload = try req.auth.require(UserPayload.self)
-        guard payload.id == id else {
-            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
-        }
-        
+
         let statuses = [
             ReservationStatus.validated.rawValue,
             ReservationStatus.pending.rawValue
@@ -100,7 +90,7 @@ struct ReservationController: RouteCollection {
             .query(on: req.db)
             .with(\.$workshop)
             .with(\.$user)
-            .filter(\.$user.$id == id)
+            .filter(\.$user.$id == payload.id)
             .filter(\.$status ~~ statuses)
             .all()
         
