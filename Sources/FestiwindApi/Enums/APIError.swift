@@ -21,6 +21,7 @@ enum APIError: LocalizedError {
     case userNotFound
     case alreadyBooked
     case workshopFull
+    case reservationCancelled
 
     var errorDescription: String? {
         switch self {
@@ -50,6 +51,8 @@ enum APIError: LocalizedError {
                 return "You already booked this workshop"
             case .workshopFull:
                 return "This workshop is full"
+            case .reservationCancelled:
+                return "Reservation already cancelled"
         }
     }
 }

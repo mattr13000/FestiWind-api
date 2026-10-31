@@ -139,18 +139,19 @@ struct ReservationController: RouteCollection {
             throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
-        guard let workshop = try await Workshop.find(reservation.workshop.id, on: req.db)
+        guard let workshop = try await Workshop.find(reservation.$workshop.id, on: req.db)
         else {
             throw Abort(.notFound)
         }
         
-        
-        
         try await req.db.transaction { transaction in
+            guard reservation.status == ReservationStatus.validated.rawValue else {
+                throw Abort(.badRequest, reason: APIError.reservationCancelled.errorDescription)
+            }
             reservation.status = updateData.status
             workshop.totalSubscribers -= 1
             try await workshop.update(on: transaction)
-            try await reservation.create(on: transaction)
+            try await reservation.update(on: transaction)
         }
         
         try await reservation.$workshop.load(on: req.db)
