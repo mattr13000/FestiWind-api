@@ -63,7 +63,11 @@ struct ReservationController: RouteCollection {
 
         let reservation = try dto.toModel(userID: payload.id)
         
-        try await reservation.create(on: req.db)
+        try await req.db.transaction { transaction in
+            workshop.totalSubscribers += 1
+            try await workshop.update(on: transaction)
+            try await reservation.create(on: transaction)
+        }
         
         reservation.$workshop.value = workshop
         reservation.$user.value = user
@@ -135,9 +139,19 @@ struct ReservationController: RouteCollection {
             throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
-        reservation.status = updateData.status
+        guard let workshop = try await Workshop.find(reservation.workshop.id, on: req.db)
+        else {
+            throw Abort(.notFound)
+        }
         
-        try await reservation.update(on: req.db)
+        
+        
+        try await req.db.transaction { transaction in
+            reservation.status = updateData.status
+            workshop.totalSubscribers -= 1
+            try await workshop.update(on: transaction)
+            try await reservation.create(on: transaction)
+        }
         
         try await reservation.$workshop.load(on: req.db)
         
