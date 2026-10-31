@@ -78,7 +78,7 @@ struct SeedCommand: AsyncCommand {
             workshops.append(workshop)
         }
 
-        let statuses = ["validated", "pending", "cancelled"]
+        let statuses = ["validated", "cancelled"]
         for i in 0..<20 {
             let selectedWorkshop = workshops[i % workshops.count]
             let selectedUser = users[i % users.count]
