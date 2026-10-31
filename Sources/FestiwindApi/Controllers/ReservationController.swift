@@ -170,7 +170,9 @@ struct ReservationController: RouteCollection {
         else {throw Abort(.notFound)}
         
         try await req.db.transaction { transaction in
-            workshop.totalSubscribers -= 1
+            if (reservation.status == ReservationStatus.validated.rawValue) {
+                workshop.totalSubscribers -= 1
+            }
             try await workshop.update(on: transaction)
             try await reservation.delete(on: transaction)
         }
