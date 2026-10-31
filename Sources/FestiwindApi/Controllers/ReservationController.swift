@@ -99,18 +99,13 @@ struct ReservationController: RouteCollection {
     
     func userReservations(req: Request) async throws -> UserReservationsDTO {
         let payload = try req.auth.require(UserPayload.self)
-
-        let statuses = [
-            ReservationStatus.validated.rawValue,
-            ReservationStatus.pending.rawValue
-        ]
         
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
             .with(\.$user)
             .filter(\.$user.$id == payload.id)
-            .filter(\.$status ~~ statuses)
+            .filter(\.$status == ReservationStatus.validated.rawValue)
             .all()
         
         let userReservations = try UserReservationsDTO(reservations:
@@ -144,10 +139,11 @@ struct ReservationController: RouteCollection {
             throw Abort(.notFound)
         }
         
+        guard reservation.status == ReservationStatus.validated.rawValue else {
+            throw Abort(.conflict, reason: APIError.reservationCancelled.errorDescription)
+        }
+        
         try await req.db.transaction { transaction in
-            guard reservation.status == ReservationStatus.validated.rawValue else {
-                throw Abort(.badRequest, reason: APIError.reservationCancelled.errorDescription)
-            }
             reservation.status = updateData.status
             workshop.totalSubscribers -= 1
             try await workshop.update(on: transaction)
@@ -170,7 +166,14 @@ struct ReservationController: RouteCollection {
         guard let reservation = try await Reservation.find(id, on: req.db)
         else {throw Abort(.notFound)}
         
-        try await reservation.delete(on: req.db)
+        guard let workshop = try await Workshop.find(reservation.$workshop.id, on: req.db)
+        else {throw Abort(.notFound)}
+        
+        try await req.db.transaction { transaction in
+            workshop.totalSubscribers -= 1
+            try await workshop.update(on: transaction)
+            try await reservation.delete(on: transaction)
+        }
         
         return .noContent
     }
