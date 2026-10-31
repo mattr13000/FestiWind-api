@@ -97,7 +97,7 @@ struct ReservationController: RouteCollection {
         return try reservation.toDTO()
     }
     
-    func userReservations(req: Request) async throws -> UserReservationsDTO {
+    func userReservations(req: Request) async throws -> [ReservationDTO] {
         let payload = try req.auth.require(UserPayload.self)
         
         let reservations = try await Reservation
@@ -108,9 +108,7 @@ struct ReservationController: RouteCollection {
             .filter(\.$status == ReservationStatus.validated.rawValue)
             .all()
         
-        let userReservations = try UserReservationsDTO(reservations:
-            reservations)
-        return userReservations
+        return try reservations.map { try $0.toDTO() }
     }
     
     func update(req: Request) async throws -> ReservationDTO {
