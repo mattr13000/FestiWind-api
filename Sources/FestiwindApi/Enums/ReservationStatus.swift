@@ -9,5 +9,6 @@ import Foundation
 
 enum ReservationStatus: String, Codable, Sendable {
     case validated
+    case pending
     case cancelled
 }
