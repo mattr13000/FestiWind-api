@@ -105,7 +105,7 @@ struct ReservationController: RouteCollection {
             .with(\.$workshop)
             .with(\.$user)
             .filter(\.$user.$id == payload.id)
-            .filter(\.$status == ReservationStatus.validated.rawValue)
+            .filter(\.$status != ReservationStatus.cancelled.rawValue)
             .all()
         
         return try reservations.map { try $0.toDTO() }
