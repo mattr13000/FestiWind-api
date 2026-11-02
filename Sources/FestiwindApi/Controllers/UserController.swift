@@ -18,7 +18,7 @@ struct UserController: RouteCollection {
         let authenticated = users.grouped(JWTMiddleware())
         let staff = authenticated.grouped(RoleMiddleware(allowedRoles: [.staff]))
         
-        users.post(use: create)
+        users.post("register", use: create)
         users.post("login", use: login)
         authenticated.get("profile", use: profile)
 
