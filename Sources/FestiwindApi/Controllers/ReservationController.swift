@@ -16,7 +16,7 @@ struct ReservationController: RouteCollection {
         let staff = jwtProtectedRoutes.grouped(RoleMiddleware(allowedRoles: [.staff]))
         
         jwtProtectedRoutes.post(use: create)
-        jwtProtectedRoutes.get("user", ":id", use: userReservations)
+        jwtProtectedRoutes.get("me", use: userReservations)
         jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)
@@ -26,7 +26,7 @@ struct ReservationController: RouteCollection {
         staff.delete(":id", use: delete)
     }
     
-    func index(req: Request) async throws -> [WorkshopReservationDTO] {
+    func index(req: Request) async throws -> [ReservationDTO] {
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
@@ -35,43 +35,55 @@ struct ReservationController: RouteCollection {
         return try reservations.map { try $0.toDTO() }
     }
     
-    func create(req: Request) async throws -> WorkshopReservationDTO {
+    func create(req: Request) async throws -> ReservationDTO {
         let dto = try req.content.decode(CreateReservationDTO.self)
         
         let payload = try req.auth.require(UserPayload.self)
-        guard payload.id == dto.userID else {
-            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
-        }
-        
-        guard let _ = try await User.find(dto.userID, on: req.db),
-              let _ = try await Workshop.find(dto.workshopID, on: req.db)
+
+        guard let user = try await User.find(payload.id, on: req.db),
+              let workshop = try await Workshop.find(dto.workshopID, on: req.db)
         else {
             throw Abort(.notFound)
         }
         
-        let reservation = try dto.toModel()
+        let existingReservation = try await Reservation
+            .query(on: req.db)
+            .filter(\.$user.$id == payload.id)
+            .filter(\.$workshop.$id == dto.workshopID)
+            .filter(\.$status != ReservationStatus.cancelled.rawValue)
+            .first()
+
+        guard existingReservation == nil else {
+            throw Abort(.conflict, reason: APIError.alreadyBooked.errorDescription)
+        }
+
+        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else {
+            throw Abort(.conflict, reason: APIError.workshopFull.errorDescription)
+        }
+
+        let reservation = try dto.toModel(userID: payload.id)
         
-        try await reservation.create(on: req.db)
+        try await req.db.transaction { transaction in
+            workshop.totalSubscribers += 1
+            try await workshop.update(on: transaction)
+            try await reservation.create(on: transaction)
+        }
         
-        guard let savedReservation = try await Reservation.query(on: req.db)
-                    .with(\.$user)
-                    .with(\.$workshop)
-                    .filter(\.$id == reservation.requireID())
-                    .first() else {
-                    throw Abort(.internalServerError)
-                }
-                 
-                return try savedReservation.toDTO()
+        reservation.$workshop.value = workshop
+        reservation.$user.value = user
+        
+        return try reservation.toDTO()
     }
     
-    func show(req: Request) async throws -> WorkshopReservationDTO {
-        
+    func show(req: Request) async throws -> ReservationDTO {
+
         guard let id = req.parameters.get("id", as: UUID.self)
         else {throw Abort(.badRequest)}
         
         guard let reservation = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
+            .with(\.$user)
             .filter(\.$id == id)
             .first()
         else {throw Abort(.notFound)}
@@ -85,33 +97,21 @@ struct ReservationController: RouteCollection {
         return try reservation.toDTO()
     }
     
-    func userReservations(req: Request) async throws -> UserReservationsDTO {
-        guard let id = req.parameters.get("id", as: UUID.self)
-        else {throw Abort(.badRequest)}
-        
+    func userReservations(req: Request) async throws -> [ReservationDTO] {
         let payload = try req.auth.require(UserPayload.self)
-        guard payload.id == id else {
-            throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
-        }
-        
-        let statuses = [
-            ReservationStatus.validated.rawValue,
-            ReservationStatus.pending.rawValue
-        ]
         
         let reservations = try await Reservation
             .query(on: req.db)
             .with(\.$workshop)
-            .filter(\.$user.$id == id)
-            .filter(\.$status ~~ statuses)
+            .with(\.$user)
+            .filter(\.$user.$id == payload.id)
+            .filter(\.$status != ReservationStatus.cancelled.rawValue)
             .all()
         
-        let userReservations = try UserReservationsDTO(reservations:
-            reservations)
-        return userReservations
+        return try reservations.map { try $0.toDTO() }
     }
     
-    func update(req: Request) async throws -> WorkshopReservationDTO {
+    func update(req: Request) async throws -> ReservationDTO {
         
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest)
@@ -132,11 +132,25 @@ struct ReservationController: RouteCollection {
             throw Abort(.forbidden, reason: APIError.forbidden.errorDescription)
         }
         
-        reservation.status = updateData.status
+        guard let workshop = try await Workshop.find(reservation.$workshop.id, on: req.db)
+        else {
+            throw Abort(.notFound)
+        }
         
-        try await reservation.update(on: req.db)
+        guard reservation.status == ReservationStatus.validated.rawValue else {
+            throw Abort(.conflict, reason: APIError.reservationCancelled.errorDescription)
+        }
+        
+        try await req.db.transaction { transaction in
+            reservation.status = updateData.status
+            workshop.totalSubscribers -= 1
+            try await workshop.update(on: transaction)
+            try await reservation.update(on: transaction)
+        }
         
         try await reservation.$workshop.load(on: req.db)
+        
+        try await reservation.$user.load(on: req.db)
         
         return try reservation.toDTO()
     }
@@ -150,7 +164,16 @@ struct ReservationController: RouteCollection {
         guard let reservation = try await Reservation.find(id, on: req.db)
         else {throw Abort(.notFound)}
         
-        try await reservation.delete(on: req.db)
+        guard let workshop = try await Workshop.find(reservation.$workshop.id, on: req.db)
+        else {throw Abort(.notFound)}
+        
+        try await req.db.transaction { transaction in
+            if (reservation.status == ReservationStatus.validated.rawValue) {
+                workshop.totalSubscribers -= 1
+            }
+            try await workshop.update(on: transaction)
+            try await reservation.delete(on: transaction)
+        }
         
         return .noContent
     }

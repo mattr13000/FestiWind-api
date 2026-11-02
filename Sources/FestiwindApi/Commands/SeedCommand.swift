@@ -78,7 +78,7 @@ struct SeedCommand: AsyncCommand {
             workshops.append(workshop)
         }
 
-        let statuses = ["confirmed", "pending", "cancelled"]
+        let statuses = ["validated", "pending", "cancelled"]
         for i in 0..<20 {
             let selectedWorkshop = workshops[i % workshops.count]
             let selectedUser = users[i % users.count]
@@ -92,7 +92,7 @@ struct SeedCommand: AsyncCommand {
             )
             try await reservation.save(on: database)
 
-            if status == "confirmed" {
+            if status == "validated" {
                 selectedWorkshop.totalSubscribers += 1
                 try await selectedWorkshop.save(on: database)
             }
