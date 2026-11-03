@@ -22,37 +22,40 @@ enum APIError: LocalizedError {
     case alreadyBooked
     case workshopFull
     case reservationCancelled
+    case totalSubscribersNotZero
 
     var errorDescription: String? {
         switch self {
-            case .badRequest:
-                return "Bad request"
-            case .emptyName:
-                return "Name is empty"
-            case .endTimeGreaterThanStartTime:
-                return "Event ending before start time"
-            case .wrongEventCapacity:
-                return "Event capacity <= 0"
-            case .categoryNotFound:
-                return "Category not found"
-            case .nameAlreadyExists:
-                return "A workshop with this name already exists"
-            case .invalidCredentials:
-                return "Invalid email or password"
-            case .missingToken:
-                return "Missing token"
-            case .invalidToken:
-                return "Invalid or expired token"
-            case .forbidden:
-                return "You don't have permission to do this"
-            case .userNotFound:
-                return "User not found"
-            case .alreadyBooked:
-                return "You already booked this workshop"
-            case .workshopFull:
-                return "This workshop is full"
-            case .reservationCancelled:
-                return "Reservation already cancelled"
+        case .badRequest:
+            return "Bad request"
+        case .emptyName:
+            return "Name is empty"
+        case .endTimeGreaterThanStartTime:
+            return "Event ending before start time"
+        case .wrongEventCapacity:
+            return "Event capacity <= 0"
+        case .categoryNotFound:
+            return "Category not found"
+        case .nameAlreadyExists:
+            return "A workshop with this name already exists"
+        case .invalidCredentials:
+            return "Invalid email or password"
+        case .missingToken:
+            return "Missing token"
+        case .invalidToken:
+            return "Invalid or expired token"
+        case .forbidden:
+            return "You don't have permission to do this"
+        case .userNotFound:
+            return "User not found"
+        case .alreadyBooked:
+            return "You already booked this workshop"
+        case .workshopFull:
+            return "This workshop is full"
+        case .reservationCancelled:
+            return "Reservation already cancelled"
+        case .totalSubscribersNotZero:
+            return "Total subscribers must be zero at creation"
         }
     }
 }

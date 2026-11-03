@@ -17,6 +17,7 @@ struct ReservationController: RouteCollection {
         
         jwtProtectedRoutes.post(use: create)
         jwtProtectedRoutes.get("me", use: userReservations)
+        jwtProtectedRoutes.get("user", ":id", use: userReservations)
         jwtProtectedRoutes.group(":id") { reservation in
             reservation.get(use: show)
             reservation.put(use: update)

@@ -31,12 +31,22 @@ struct UserControllerTests {
     @Test("GET /users")
     func testIndex() async throws {
         try await withApp { app in
+            let user = try await app.createUser(
+                email: "didier@test.com",
+                role: .staff
+            )
+            let token = try app.generateToken(for: user)
+            
             try await app.createUsers(count: 3)
 
-            try await app.testing().test(.GET, "users", afterResponse: { res async throws in
+            try await app.testing().test(.GET, "users",
+                                         beforeRequest: { req in
+                                             req.headers.bearerAuthorization = BearerAuthorization(token: token)
+                                         },
+                                         afterResponse: { res async throws in
                 #expect(res.status == .ok)
                 let users = try res.content.decode([UserDTO].self)
-                #expect(users.count == 3)
+                #expect(users.count == 4)
             })
         }
     }
@@ -86,7 +96,7 @@ struct UserControllerTests {
         }
     }
 
-    @Test("POST /users/login -> Negative")
+    @Test("POST /users/login -> unauthorized")
     func testLoginWrongPassword() async throws {
         try await withApp { app in
             _ = try await app.createUser(
@@ -102,7 +112,7 @@ struct UserControllerTests {
             try await app.testing().test(.POST, "users/login", beforeRequest: { req in
                 try req.content.encode(loginDTO)
             }, afterResponse: { res async in
-                #expect(res.status == .notFound)
+                #expect(res.status == .unauthorized)
             })
         }
     }
@@ -126,17 +136,24 @@ struct UserControllerTests {
     @Test("GET /users/:userID")
     func testGetUserById() async throws {
         try await withApp { app in
-            let user = try await app.createUser(email: "byid@test.com")
-            let userToken = try app.generateToken(for: user)
+            let user = try await app.createUser(
+                name: "Dider",
+                email: "didier@test.com",
+                role: .staff
+            )
+            let token = try app.generateToken(for: user)
+            
+            try await app.createUsers(count: 3)
+
             let userID = try user.requireID()
 
             try await app.testing().test(.GET, "users/\(userID)", beforeRequest: { req in
-                req.headers.bearerAuthorization = BearerAuthorization(token: userToken)
+                req.headers.bearerAuthorization = BearerAuthorization(token: token)
             }, afterResponse: { res async throws in
                 #expect(res.status == .ok)
                 let userDTO = try res.content.decode(UserDTO.self)
                 #expect(userDTO.id == userID)
-                #expect(userDTO.email == "byid@test.com")
+                #expect(userDTO.email == "didier@test.com")
             })
         }
     }

@@ -167,7 +167,6 @@ struct ReservationControllerTests {
             )
             
             let createDTO = CreateReservationDTO(
-                            userID: try user.requireID(),
                             workshopID: try workshop.requireID()
                         )
             
