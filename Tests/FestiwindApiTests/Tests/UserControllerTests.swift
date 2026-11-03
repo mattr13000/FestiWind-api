@@ -51,7 +51,7 @@ struct UserControllerTests {
         }
     }
 
-    @Test("POST /users")
+    @Test("POST /users/register")
     func testCreate() async throws {
         try await withApp { app in
             let createDTO = CreateUserDTO(
@@ -61,7 +61,7 @@ struct UserControllerTests {
                 email: "new@test.com"
             )
 
-            try await app.testing().test(.POST, "users", beforeRequest: { req in
+            try await app.testing().test(.POST, "users/register", beforeRequest: { req in
                 try req.content.encode(createDTO)
             }, afterResponse: { res async throws in
                 #expect(res.status == .ok)
