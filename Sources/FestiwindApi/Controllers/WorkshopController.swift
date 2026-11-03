@@ -36,7 +36,6 @@ struct WorkshopController: RouteCollection {
  
     func create(req: Request) async throws -> WorkshopDTO {
         let dto = try req.content.decode(CreateWorkshopDTO.self)
-
         guard !dto.name.isEmpty else {
             throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
@@ -47,10 +46,10 @@ struct WorkshopController: RouteCollection {
         guard dto.capacityMax > 0 else {
             throw Abort(.badRequest, reason: APIError.wrongEventCapacity.errorDescription)
         }
+        
         guard try await Category.find(dto.categoryID, on: req.db) != nil else {
             throw Abort(.badRequest, reason: APIError.categoryNotFound.errorDescription)
         }
-        
         
         let workshop = dto.toModel()
         try await workshop.create(on: req.db)
