@@ -10,5 +10,7 @@
 			"path": "../FestiWind-backoffice"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "FestiWind-backoffice"
+	}
 }

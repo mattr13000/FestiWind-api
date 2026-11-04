@@ -47,19 +47,33 @@ struct ReservationController: RouteCollection {
             throw Abort(.notFound)
         }
         
+        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else {
+            throw Abort(.conflict, reason: APIError.workshopFull.errorDescription)
+        }
+        
         let existingReservation = try await Reservation
             .query(on: req.db)
             .filter(\.$user.$id == payload.id)
             .filter(\.$workshop.$id == dto.workshopID)
-            .filter(\.$status != ReservationStatus.cancelled.rawValue)
             .first()
 
-        guard existingReservation == nil else {
-            throw Abort(.conflict, reason: APIError.alreadyBooked.errorDescription)
-        }
+        if let existingReservation {
+            guard existingReservation.status == ReservationStatus.cancelled.rawValue else {
+                throw Abort(.conflict, reason: APIError.alreadyBooked.errorDescription)
+            }
 
-        guard (workshop.capacityMax - workshop.totalSubscribers) > 0 else {
-            throw Abort(.conflict, reason: APIError.workshopFull.errorDescription)
+            existingReservation.status = ReservationStatus.validated.rawValue
+
+            try await req.db.transaction { transaction in
+                workshop.totalSubscribers += 1
+                try await workshop.update(on: transaction)
+                try await existingReservation.update(on: transaction)
+            }
+
+            existingReservation.$workshop.value = workshop
+            existingReservation.$user.value = user
+
+            return try existingReservation.toDTO()
         }
 
         let reservation = try dto.toModel(userID: payload.id)
