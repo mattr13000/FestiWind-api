@@ -47,14 +47,6 @@ swift run FestiwindApi migrate --revert --yes
 swift run FestiwindApi migrate --yes
 swift run FestiwindApi seed
 ```
-
-### See more
-
-- [Vapor Website](https://vapor.codes)
-- [Vapor Documentation](https://docs.vapor.codes)
-- [Vapor GitHub](https://github.com/vapor)
-- [Vapor Community maintained packages](https://github.com/vapor-community)
-
 ## Configuration
 
 The project uses a `.env` file for sensitive information
@@ -66,12 +58,16 @@ The project uses a `.env` file for sensitive information
 ```
 2. Open `.env` and fill in each value. Shared values
    (the team's database) must be requested from a project member.
-3. Generate a secret for `JWT_SECRET`:
-```
-   openssl rand -base64 32
-```
-4. In Xcode, set the scheme's working directory to the project root
+
+3. In Xcode, set the scheme's working directory to the project root
    (Product > Scheme > Edit Scheme > Run > Options >
    Use custom working directory), otherwise the `.env` file is not found.
+   
+### See more
 
-Never commit the `.env` file.
+- [Vapor Website](https://vapor.codes)
+- [Vapor Documentation](https://docs.vapor.codes)
+- [Vapor GitHub](https://github.com/vapor)
+- [Vapor Community maintained packages](https://github.com/vapor-community)
+
+
