@@ -25,10 +25,15 @@ func configure(_ app: Application) async throws {
     //------------------- Services ----------------------
     app.asyncCommands.use(SeedCommand(), as: "seed")
 
-    guard let jwtSecret = Environment.get("JWT_SECRET"), !jwtSecret.isEmpty else {
-    fatalError("JWT_SECRET manquant dans le .env")
+    let jwtSecret: String
+    if app.environment == .testing {
+        jwtSecret = "secret-de-test-uniquement"
+    } else {
+        guard let secret = Environment.get("JWT_SECRET"), !secret.isEmpty else {
+            fatalError("JWT_SECRET manquant dans le .env")
+        }
+        jwtSecret = secret
     }
-
     app.jwt.signers.use(.hs256(key: jwtSecret))
 
     let corsConfiguration = CORSMiddleware.Configuration(
