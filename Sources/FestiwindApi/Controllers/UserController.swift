@@ -20,6 +20,7 @@ struct UserController: RouteCollection {
         
         users.post("register", use: create)
         users.post("login", use: login)
+        users.post("staff", "login", use: staffLogin)
         authenticated.get("profile", use: profile)
 
         staff.get(use: index)
@@ -50,6 +51,31 @@ struct UserController: RouteCollection {
         else {
             throw Abort(.unauthorized, reason: "Unable to sign in to your account")
         }//we switch the error notFound to unauthorized and the error message to dont give information if the mail exist in the back.
+  
+        guard try Bcrypt.verify(userRequest.password, created: userDB.passwordHash)
+        else {
+            throw Abort(.unauthorized, reason: "Unable to sign in to your account")
+        }
+
+        let payload = UserPayload(id: try userDB.requireID(), role: userDB.role)
+        let jwToken = try req.jwt.sign(payload)
+
+        return AuthDTO(token: jwToken)
+    }
+    
+    func staffLogin(req: Request) async throws -> AuthDTO {
+        let userRequest = try req.content.decode(LoginDTO.self)
+
+        guard let userDB = try await User.query(on: req.db)
+            .filter(\.$email == userRequest.email)
+            .first()
+        else {
+            throw Abort(.unauthorized, reason: "Unable to sign in to your account")
+        }
+        
+        guard userDB.role == .staff else {
+            throw Abort(.unauthorized, reason: "Unable to sign in to your account")
+        }
   
         guard try Bcrypt.verify(userRequest.password, created: userDB.passwordHash)
         else {
