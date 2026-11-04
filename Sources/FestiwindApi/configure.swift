@@ -25,7 +25,11 @@ func configure(_ app: Application) async throws {
     //------------------- Services ----------------------
     app.asyncCommands.use(SeedCommand(), as: "seed")
 
-    app.jwt.signers.use(.hs256(key: Environment.get("JWT_SECRET") ?? "stringmaisadressmailaussiazertyavecselpoivresaladtomatogno"))
+    guard let jwtSecret = Environment.get("JWT_SECRET"), !jwtSecret.isEmpty else {
+    fatalError("JWT_SECRET manquant dans le .env")
+    }
+
+    app.jwt.signers.use(.hs256(key: jwtSecret))
 
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .all,

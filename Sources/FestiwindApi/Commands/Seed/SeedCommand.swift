@@ -65,12 +65,14 @@ private extension SeedCommand {
     }
 
     func insertUsers(now: Date, on database: any Database) async throws -> [User] {
-        let passwordHash = try Bcrypt.hash("password123")
+        func hashPassword(_ password: String) throws -> String {
+            try Bcrypt.hash(password)
+}
 
         let staffUser = User(
             id: UUID(),
             name: "Staff",
-            passwordHash: try Bcrypt.hash("staff1234"),
+            passwordHash: try hashPassword("staff1234"),
             email: "staff@festiwind.fr",
             role: .staff,
             createdAt: now.addingTimeInterval(-90 * 86_400)
@@ -80,7 +82,7 @@ private extension SeedCommand {
         let user0 = User(
             id: UUID(),
             name: "Utilisateur 0",
-            passwordHash: passwordHash,
+            passwordHash: try hashPassword("password123"),
             email: "user0@festiwind.fr",
             role: .festivalGoer,
             createdAt: now.addingTimeInterval(-60 * 86_400)
@@ -93,7 +95,7 @@ private extension SeedCommand {
             let user = User(
                 id: UUID(),
                 name: "\(name.first) \(name.last)",
-                passwordHash: passwordHash,
+                passwordHash: user0.passwordHash,
                 email: SeedData.email(first: name.first, last: name.last, domain: isStaff ? "festiwind.fr" : "exemple.fr"),
                 role: isStaff ? .staff : .festivalGoer,
                 createdAt: now.addingTimeInterval(-Double(index + 1) * 86_400)
