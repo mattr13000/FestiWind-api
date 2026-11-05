@@ -135,7 +135,7 @@ private extension SeedCommand {
         return planned.sorted { $0.workshop.startTime < $1.workshop.startTime }
     }
 
-    func insertWorkshopsAndReservations(_ planned: [PlannedWorkshop], users: [User], on database: Database) async throws -> Int {
+    func insertWorkshopsAndReservations(_ planned: [PlannedWorkshop], users: [User], on database: any Database) async throws -> Int {
         var validatedSlots: [UUID: [(start: Date, end: Date)]] = [:]
         var reservationCount = 0
 
