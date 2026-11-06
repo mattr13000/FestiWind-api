@@ -29,9 +29,6 @@ To clear tables, use the following command:
 swift run FestiwindApi revert --all --yes
 ```
 
-# Réapplique le schéma + les seeds
-swift run FestiwindApi auto-migrate
-
 ### See more
 
 - [Vapor Website](https://vapor.codes)
