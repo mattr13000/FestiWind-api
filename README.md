@@ -26,11 +26,11 @@ swift run FestiwindApi seed
 
 To clear tables, use the following command: 
 ```bash
-swift run App revert --all --yes
+swift run FestiwindApi revert --all --yes
 ```
 
 # Réapplique le schéma + les seeds
-swift run App auto-migrate
+swift run FestiwindApi auto-migrate
 
 ### See more
 
