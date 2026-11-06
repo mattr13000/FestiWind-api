@@ -62,6 +62,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateCategory())
     app.migrations.add(CreateWorkshop())
     app.migrations.add(CreateReservation())
+    app.migrations.add(ChangeWorkshopDateToDateTime())
     
     
 
