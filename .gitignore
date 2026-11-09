@@ -28,3 +28,8 @@ Festiwind.code-workspace
 
 # Swift profiling output
 *.profraw
+
+# Docker
+
+Dockerfile
+docker-compose.yml
