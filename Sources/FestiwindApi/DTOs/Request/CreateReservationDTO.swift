@@ -8,17 +8,15 @@
 import Vapor
 
 struct CreateReservationDTO: Content {
-    let userID: UUID
     let workshopID: UUID
 }
 
 extension CreateReservationDTO {
-    func toModel() throws -> Reservation {
+    func toModel(userID: UUID) throws -> Reservation {
         return Reservation (
-            status: "Ok",
+            status: ReservationStatus.validated.rawValue,
             userID: userID,
             workshopID: workshopID
         )
     }
 }
-

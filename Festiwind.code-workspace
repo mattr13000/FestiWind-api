@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../FestiWind"
+		},
+		{
+			"path": "../FestiWind-backoffice"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "FestiWind-backoffice"
+	}
+}

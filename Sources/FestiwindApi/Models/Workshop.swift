@@ -82,7 +82,7 @@ extension Workshop {
             capacityMax: capacityMax,
             totalSubscribers: totalSubscribers,
             description: description,
-            categoryID: $category.id
+            category: $category.name
         )
     }
 }

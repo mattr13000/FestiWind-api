@@ -10,24 +10,25 @@ import Vapor
 
 struct CategoryController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
-        
         let categories = routes.grouped("categories")
-        
+        let staff = categories.grouped(JWTMiddleware(), RoleMiddleware(allowedRoles: [.staff]))
+
         categories.get(use: index)
-        categories.post(use: create)
         
-        categories.group(":id") { category in
+        // V2
+        staff.post(use: create)
+
+        staff.group(":id") { category in
             category.put(use: update)
             category.delete(use: delete)
         }
-
     }
     
     func index(req: Request) async throws -> [CategoryDTO] {
 
         let categories = try await Category.query(on: req.db).all()
 
-        //        équivalent : return categories.map { category in CategoryDTO(id: category.id, name: category.name) }
+        // équivalent : return categories.map { category in CategoryDTO(id: category.id, name: category.name) }
         return try categories.map { try $0.toUpdateDTO() }
     }
     
@@ -36,7 +37,7 @@ struct CategoryController: RouteCollection {
         let dto = try req.content.decode(CategoryDTO.self)
         
         guard !dto.name.isEmpty else {
-            throw Abort(.badRequest, reason: "the category is mandatory.")
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
         
         let category = dto.toModel()
@@ -46,20 +47,18 @@ struct CategoryController: RouteCollection {
     }
     
     func update(req: Request) async throws -> CategoryDTO {
-        
-
         guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Identifiant not valid.")
+            throw Abort(.badRequest, reason: APIError.badRequest.errorDescription)
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Category not found.")
+            throw Abort(.notFound, reason: APIError.categoryNotFound.errorDescription)
         }
 
         let newCategory = try req.content.decode(CategoryDTO.self)
 
         guard !newCategory.name.isEmpty else {
-            throw Abort(.badRequest, reason: "Category is mandatory.")
+            throw Abort(.badRequest, reason: APIError.emptyName.errorDescription)
         }
         
         category.name = newCategory.name
@@ -71,11 +70,11 @@ struct CategoryController: RouteCollection {
     func delete(req: Request) async throws -> HTTPStatus {
 
         guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Identifiant not valid.")
+            throw Abort(.badRequest, reason: APIError.badRequest.errorDescription)
         }
 
         guard let category = try await Category.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Category not found.")
+            throw Abort(.notFound, reason: APIError.categoryNotFound.errorDescription)
         }
 
         try await category.delete(on: req.db)

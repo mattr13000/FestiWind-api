@@ -9,17 +9,4 @@ import Vapor
 
 struct UpdateReservationDTO: Content {
     let status: String
-    let userID: UUID
-    let workshopID: UUID
 }
-
-extension UpdateReservationDTO {
-    func toModel() throws -> Reservation {
-        return Reservation (
-            status: status,
-            userID: userID,
-            workshopID: workshopID
-        )
-    }
-}
-

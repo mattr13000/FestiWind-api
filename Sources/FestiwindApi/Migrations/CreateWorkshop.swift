@@ -19,12 +19,12 @@ struct CreateWorkshop: AsyncMigration {
             )
             .field(
                 "start_time",
-                .date,
+                .datetime,
                 .required,
             )
             .field(
                 "end_time",
-                .date,
+                .datetime,
                 .required,
             )
             .field(
